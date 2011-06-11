@@ -443,6 +443,16 @@ exports.setUpEditor = function(isReadOnly){
 		dojo.subscribe("/dojo/hashchange", inputManager, function() {inputManager.hashChanged(editor);});
 		inputManager.setInput(dojo.hash(), editor);
 		
+		var modelListeners = serviceRegistry.getServiceReferences("orion.edit.listener");
+	
+		for (var i=0; i<modelListeners.length; i++) {
+			serviceRegistry.getService(modelListeners[i]).then(function(listener) {
+				if (listener.onModelChanging) {
+					editor.getTextView().addEventListener("ModelChanging", listener, listener.onModelChanging);
+				}
+			});
+		}
+
 		// TODO search location needs to be gotten from somewhere
 		mGlobalCommands.generateBanner("toolbar", serviceRegistry, commandService, prefsService, searcher, editor, editor, escHandler);
 		mGlobalCommands.generateDomCommandsInBanner(commandService, editor);

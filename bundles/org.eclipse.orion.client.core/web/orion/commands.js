@@ -429,53 +429,66 @@ define(['dojo', 'dijit', 'orion/util', 'dijit/Menu', 'dijit/form/DropDownButton'
 						}
 					}
 					if (render) {
-						// special case.  The item wants to provide a set of choices
-						if (command.choiceCallback) {
-							var choicesMenu = new dijit.Menu({
-								style: "display: none;"
-							});
-							if (renderType === "image") {
-								menuButton = new dijit.form.DropDownButton({
-										label: command.name,
-										dropDown: choicesMenu
-								        });
-								if (command.image) {
-									dojo.addClass(menuButton.iconNode, "commandImage");
-									if (cssClass) {
-										dojo.addClass(menuButton.iconNode, cssClass);
-									}
-									menuButton.iconNode.src = command.image;
+						if(render.then){
+							var self = this;
+							var index = i;
+							render.then(function(isVisible){
+								if(isVisible){
+									dojo.hitch(self, self._doRender(command, parent, items, handler, renderType, cssClass, userData, forceText, index));
 								}
-								dojo.place(menuButton.domNode, parent, "last");
-								menuButton.eclipseCommand = command;
-								menuButton.eclipseChoices = choicesMenu;
-								dojo.connect(menuButton, "onClick", menuButton, function(event) {
-									this.eclipseCommand.populateChoicesMenu(this.eclipseChoices, items, handler, userData);
-								});
-							} else if (renderType === "menu") {
-								// parent is already a menu
-								var popup = new dijit.PopupMenuItem({
-									label: command.name,
-									popup: choicesMenu
-								});
-								parent.addChild(popup);
-								popup.eclipseCommand = command;
-								popup.eclipseChoices = choicesMenu;
-								// See https://bugs.eclipse.org/bugs/show_bug.cgi?id=338887
-								dojo.connect(parent, "_openPopup", popup, function(event) {
-									this.eclipseCommand.populateChoicesMenu(this.eclipseChoices, items, handler, userData);
-								});
-							}
-						} else {
-							if (renderType === "image") {
-								id = "image" + command.id + i;  // using the index ensures unique ids within the DOM when a command repeats for each item
-								image = command._asImage(id, items, handler, userData, cssClass, forceText);
-								dojo.place(image, parent, "last");
-							} else if (renderType === "menu") {
-								command._addMenuItem(parent, items, handler, userData, cssClass);
-							}
+							});
+						}else{
+							this._doRender(command, parent, items, handler, renderType, cssClass, userData, forceText, i);
 						}
 					}
+				}
+			}
+		},
+		_doRender: function(command, parent, items, handler, renderType, cssClass, userData, forceText, index) {
+			// special case.  The item wants to provide a set of choices
+			if (command.choiceCallback) {
+				var choicesMenu = new dijit.Menu({
+					style: "display: none;"
+				});
+				if (renderType === "image") {
+					menuButton = new dijit.form.DropDownButton({
+							label: command.name,
+							dropDown: choicesMenu
+					        });
+					if (command.image) {
+						dojo.addClass(menuButton.iconNode, "commandImage");
+						if (cssClass) {
+							dojo.addClass(menuButton.iconNode, cssClass);
+						}
+						menuButton.iconNode.src = command.image;
+					}
+					dojo.place(menuButton.domNode, parent, "last");
+					menuButton.eclipseCommand = command;
+					menuButton.eclipseChoices = choicesMenu;
+					dojo.connect(menuButton, "onClick", menuButton, function(event) {
+						this.eclipseCommand.populateChoicesMenu(this.eclipseChoices, items, handler, userData);
+					});
+				} else if (renderType === "menu") {
+					// parent is already a menu
+					var popup = new dijit.PopupMenuItem({
+						label: command.name,
+						popup: choicesMenu
+					});
+					parent.addChild(popup);
+					popup.eclipseCommand = command;
+					popup.eclipseChoices = choicesMenu;
+					// See https://bugs.eclipse.org/bugs/show_bug.cgi?id=338887
+					dojo.connect(parent, "_openPopup", popup, function(event) {
+						this.eclipseCommand.populateChoicesMenu(this.eclipseChoices, items, handler, userData);
+					});
+				}
+			} else {
+				if (renderType === "image") {
+					id = "image" + command.id + index;  // using the index ensures unique ids within the DOM when a command repeats for each item
+					image = command._asImage(id, items, handler, userData, cssClass, forceText);
+					dojo.place(image, parent, "last");
+				} else if (renderType === "menu") {
+					command._addMenuItem(parent, items, handler, userData, cssClass);
 				}
 			}
 		},

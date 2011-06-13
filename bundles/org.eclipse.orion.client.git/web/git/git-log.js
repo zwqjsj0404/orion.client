@@ -114,6 +114,7 @@ dojo.addOnLoad(function() {
 				serviceRegistry.getService("orion.git.provider").then(function(gitService){
 					gitService.getLog(jsonData.HeadLocation, jsonData.Id, function(scopedCommitsJsonData, secondArd) {
 						navigator.renderer.setIncomingCommits(scopedCommitsJsonData);
+						jsonData.ContentLocation = getRemoteFileURI(); //TODO remove when API returns content location
 						navigator.loadCommitsList(jsonData.CommitLocation + "?" + new dojo._Url(path).query, jsonData);
 					});
 				});
@@ -146,9 +147,10 @@ dojo.addOnLoad(function() {
 				console.error("HTTP status code: ", ioArgs.xhr.status);
 			}
 		}).then(function(commitLogJsonData){
-			if (commitLogJsonData.RemoteLocation == null)
+			if (commitLogJsonData.RemoteLocation == null){
+				commitLogJsonData.ContentLocation = getHeadFileUri(); //TODO remove when API returns location
 				navigator.loadCommitsList(dojo.hash(), commitLogJsonData);
-			else
+			}else
 				dojo.xhrGet({
 					url : commitLogJsonData.RemoteLocation,
 					headers : {
@@ -160,15 +162,16 @@ dojo.addOnLoad(function() {
 						serviceRegistry.getService("orion.git.provider").then(function(gitService){
 							gitService.getLog(remoteJsonData.CommitLocation, "HEAD", function(scopedCommitsJsonData, secondArg) {
 								navigator.renderer.setOutgoingCommits(scopedCommitsJsonData);
-								//navigator.loadCommitsList(dojo.hash(), remoteJsonData);
-								navigator.loadCommitsList(dojo.hash(), {RemoteLocation: commitLogJsonData.RemoteLocation});
+								commitLogJsonData.ContentLocation = getHeadFileUri(); //TODO remove when API returns location
+								navigator.loadCommitsList(dojo.hash(), commitLogJsonData);
 							});
 						});
 					},
 					error : function(error, ioArgs) {
 						mAuth.handleGetAuthenticationError(this, ioArgs);
 						console.error("HTTP status code: ", ioArgs.xhr.status);
-						navigator.loadCommitsList(dojo.hash(), {RemoteLocation: commitLogJsonData.RemoteLocation});
+						commitLogJsonData.ContentLocation = getHeadFileUri(); //TODO remove when API returns location
+						navigator.loadCommitsList(dojo.hash(), commitLogJsonData);
 					}
 				});
 		});
@@ -209,6 +212,7 @@ dojo.addOnLoad(function() {
 					serviceRegistry.getService("orion.git.provider").then(function(gitService){
 						gitService.getLog(jsonData.HeadLocation, jsonData.Id, function(scopedCommitsJsonData, secondArd) {
 							navigator.renderer.setIncomingCommits(scopedCommitsJsonData);
+							jsonData.ContentLocation = getRemoteFileURI(); //TODO remove when API returns content location
 							navigator.loadCommitsList(jsonData.CommitLocation + "?" + new dojo._Url(path).query, jsonData);			
 						});
 					});
@@ -223,7 +227,7 @@ dojo.addOnLoad(function() {
 				var fileClient = new mFileClient.FileClient(fileService);
 				initTitleBar(fileClient, navigator);
 			});
-			navigator.loadCommitsList(dojo.hash(), {});
+			navigator.loadCommitsList(dojo.hash(), {ContentLocation: getHeadFileUri()}); //TODO remove when API returns content location
 		}
 	});
 });
@@ -294,9 +298,6 @@ function initTitleBar(fileClient, navigator, item){
 						if(breadcrumb.path && breadcrumb.path!="")
 							document.title = getPageTitle() + " - " + breadcrumb.path;
 					}
-					navigator.isRoot=!metadata.Parents || metadata.Parents.length==0;
-					navigator.isDirectory = metadata.Directory;
-					mGitCommands.updateNavTools(serviceRegistry, navigator, "pageActions", "selectionTools", navigator._lastTreeRoot);
 					navigator.updateCommands();
 					if(metadata.Directory){
 						//remove links to commit

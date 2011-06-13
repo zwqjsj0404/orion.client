@@ -545,7 +545,31 @@ var exports = {};
 				});
 			},
 			visibleWhen : function(item) {
-				return explorer.isRoot || (item.Type === "Branch" && item.Current);
+				if(item.Type === "Branch" && item.Current){
+					return true;
+				}
+				var ret = null;
+				var d = new dojo.Deferred();
+				
+				serviceRegistry.getService("orion.core.file").then(function(fileClient){
+				
+					fileClient.read(item.ContentLocation, true).then(
+						dojo.hitch(this, function(metadata) {
+							if(!metadata.Parents || metadata.Parents.length===0){
+								d.callback(true);
+							}else{
+								fileClient.read(metadata.Parents[0].Location, true).then(
+									function(parentMetadata){
+										d.callback(!parentMetadata.Git);
+									}
+								);
+							}
+						})
+					);
+				});
+				
+				
+				return d;
 			}
 		});
 	

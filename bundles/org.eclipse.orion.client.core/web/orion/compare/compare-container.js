@@ -285,27 +285,23 @@ exports.DiffStyler = (function() {
 			var lineTypeWrapper =  textView.getModel().getLineType(lineIndex);
 			var lineType = lineTypeWrapper.type;
 			var annotationIndex = textView.getModel().getAnnotationIndexByMapper(lineTypeWrapper.mapperIndex);
-			var borderStyle = "1px #AAAAAA solid";
+			var backgroundColor = "#DDDDDD";
+			var backgroundImg = "url('/images/compare/diff-border.png')";
 			
 			var conflict = textView.getModel().isMapperConflict(lineTypeWrapper.mapperIndex);
 			if( conflict)
-				borderStyle = "1px #FF0000 solid";
+				backgroundColor = "#EEB4B4";
 			if(annotationIndex === this._compareMatchRenderer.getCurrentAnnotationIndex()){
+				backgroundImg = "url('/images/compare/diff-border-sel.png')";
 				if( conflict)
-					borderStyle = "2px #FF0000 solid";
+					backgroundColor = "#F08080";
 				else
-					borderStyle = "1px #000000 solid";
+					backgroundColor = "#BBBBBB";
 			}
 			if(lineType === "top-only") {
-				lineStyleEvent.style = {style: { borderTop: borderStyle }};
-			} else if (lineType === "oneline"){
-				lineStyleEvent.style = {style: {backgroundColor: "#EEEEEE" , border: borderStyle }};
-			} else if (lineType === "top"){
-				lineStyleEvent.style = {style: {backgroundColor: "#EEEEEE" , borderTop: borderStyle , borderLeft: borderStyle , borderRight: borderStyle}};
-			} else if (lineType === "bottom"){
-				lineStyleEvent.style = {style: {backgroundColor: "#EEEEEE" , borderBottom: borderStyle , borderLeft: borderStyle , borderRight: borderStyle}};
-			} else if (lineType === "middle"){
-				lineStyleEvent.style = {style: {backgroundColor: "#EEEEEE" , borderLeft: borderStyle , borderRight: borderStyle}};
+				lineStyleEvent.style = {style: {backgroundImage: backgroundImg ,backgroundRepeat:"repeat-x"}};
+			} else if (!(lineType === "unchanged")){
+				lineStyleEvent.style = {style: {backgroundColor: backgroundColor }};
 			} 
 		}
 	};

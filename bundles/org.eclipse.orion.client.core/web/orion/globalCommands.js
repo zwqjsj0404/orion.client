@@ -311,7 +311,7 @@ define(['dojo', 'dijit', 'orion/commands', 'orion/util', 'orion/textview/keyBind
 		commandService.addCommand(keyAssistCommand, "global");
 		commandService.registerCommandContribution("eclipse.keyAssist", 1, "globalActions", null, new mCommands.CommandKeyBinding(191, false, true), true);
 		if (editor) {
-			editor.getTextView().setKeyBinding(new mCommands.CommandKeyBinding(191, true, true), "Show Keys");
+			editor.getTextView().setKeyBinding(new mCommands.CommandKeyBinding('L', true, true), "Show Keys");
 			editor.getTextView().setAction("Show Keys", keyAssistCommand.callback);
 		}
 

@@ -407,7 +407,7 @@ orion.textview.TextView = (function() {
 			/* Destroy rulers*/
 
 			for (var i=0; i< this._rulers.length; i++) {
-				this._rulers[i].setEditor(null);
+				this._rulers[i].setView(null);
 			}
 			this.rulers = null;
 
@@ -422,7 +422,7 @@ orion.textview.TextView = (function() {
 			}
 			
 			/* Destroy DOM */
-			this._destroyEditor();
+			this._destroyView();
 			
 			var e = {};
 			this.onDestroy(e);
@@ -1068,6 +1068,7 @@ orion.textview.TextView = (function() {
 			if (endLine === undefined) { endLine = this._model.getLineCount(); }
 			if (startLine === endLine) { return; }
 			var div = this._clientDiv;
+			if (!div) { return; }
 			if (ruler) {
 				var location = ruler.getLocation();//"left" or "right"
 				var divRuler = location === "left" ? this._leftDiv : this._rightDiv;
@@ -1361,12 +1362,14 @@ orion.textview.TextView = (function() {
 				* force the clientDiv to loose and receive focus if the it is focused.
 				*/
 				if (isFirefox) {
-					var hasFocus = this._hasFocus;
 					var clientDiv = this._clientDiv;
-					if (hasFocus) { clientDiv.blur(); }
-					clientDiv.contentEditable = false;
-					clientDiv.contentEditable = true;
-					if (hasFocus) { clientDiv.focus(); }
+					if (clientDiv) {
+						var hasFocus = this._hasFocus;
+						if (hasFocus) { clientDiv.blur(); }
+						clientDiv.contentEditable = false;
+						clientDiv.contentEditable = true;
+						if (hasFocus) { clientDiv.focus(); }
+					}
 				}
 			}
 		},
@@ -2736,10 +2739,10 @@ orion.textview.TextView = (function() {
 			for (var i=0; i<rulers.length; i++) {
 				this._createRuler(rulers[i]);
 			}
-			this._createEditor();
+			this._createView();
 			this._updatePage();
 		},
-		_createEditor: function() {
+		_createView: function() {
 			var parent = this._parent;
 			var parentDocument = this._parentDocument;
 			var frameDocument = this._frameDocument;
@@ -2852,7 +2855,7 @@ orion.textview.TextView = (function() {
 				* is to map known colors using a table or fallback to light blue.
 				*/
 				if (isFirefox && isMac) {
-					var style = frameWindow.getComputedStyle(selDiv3, null);
+					var style = this._frameWindow.getComputedStyle(selDiv3, null);
 					var rgb = style.getPropertyValue("background-color");
 					switch (rgb) {
 						case "rgb(119, 141, 168)": rgb = "rgb(199, 208, 218)"; break;
@@ -2974,11 +2977,11 @@ orion.textview.TextView = (function() {
 
 			var frameWindow = frame.contentWindow;
 			this._frameWindow = frameWindow;
-			var document = frameWindow.document;
-			this._frameDocument = document;
-			document.open();
-			document.write(html.join(""));
-			document.close();
+			var frameDocument = frameWindow.document;
+			this._frameDocument = frameDocument;
+			frameDocument.open();
+			frameDocument.write(html.join(""));
+			frameDocument.close();
 		},
 		_createLine: function(parent, sibling, document, lineIndex, model) {
 			var lineText = model.getLine(lineIndex);
@@ -3089,6 +3092,7 @@ orion.textview.TextView = (function() {
 		},
 		_createRuler: function(ruler) {
 			var document = this._frameDocument;
+			if (!document) { return; }
 			var body = document.body;
 			var side = ruler.getLocation();
 			var rulerParent = side === "left" ? this._leftDiv : this._rightDiv;
@@ -3131,7 +3135,7 @@ orion.textview.TextView = (function() {
 			cell.vAlign = "top";
 			cell.appendChild(div);
 		},
-		_destroyEditor: function() {
+		_destroyView: function() {
 			this._setGrab(null);
 			this._unhookEvents();
 			var parent = this._parent;
@@ -3802,6 +3806,23 @@ orion.textview.TextView = (function() {
 			var bottom = top + lineHeight;
 			return {left: left, top: top, right: right, bottom: bottom};
 		},
+		_getVisible: function() {
+			var temp = this._parent;
+			var parentDocument = temp.ownerDocument;
+			while (temp !== parentDocument) {
+				var hidden;
+				if (isIE < 9) {
+					hidden = temp.currentStyle && temp.currentStyle.display === "none";
+				} else {
+					var tempStyle = parentDocument.defaultView.getComputedStyle(temp, null);
+					hidden = tempStyle && tempStyle.getPropertyValue("display") === "none";
+				}
+				if (hidden) { return "hidden"; }
+				temp =  temp.parentNode;
+				if (!temp) { return "disconnected"; }
+			}
+			return "visible";
+		},
 		_hitOffset: function (offset, x, y) {
 			var bounds = this._getOffsetBounds(offset);
 			var left = bounds.left;
@@ -3946,7 +3967,32 @@ orion.textview.TextView = (function() {
 			this._imeOffset = -1;
 			
 			this._createActions();
-			this._create();
+			var _this = this;
+			var checkCreate = function() {
+				if (_this._getVisible() === "visible") {
+					_this._create();
+				} else {
+					setTimeout(checkCreate, 100);
+				}
+			};
+			checkCreate();
+			addHandler(parent.ownerDocument, "DOMNodeRemoved", function(e) {
+				//TODO remove when destroyed
+				var temp = _this._parent;
+				var ancestor = false;
+				while (temp) {
+					if (temp === e.target) {
+						ancestor = true;
+						break;
+					}
+					temp = temp.parentNode;
+				}
+				if (ancestor) {
+					//TODO rulers?
+					_this._destroyView();
+					setTimeout(checkCreate, 100);
+				}
+			});
 		},
 		_modifyContent: function(e, updateCaret) {
 			if (this.readonly && !e._code) {
@@ -4429,6 +4475,7 @@ orion.textview.TextView = (function() {
 			this._setSelection(selection, true, true);
 		},
 		_showCaret: function () {
+			if (!this._frameDocument) { return; }
 			var model = this._model;
 			var selection = this._getSelection();
 			var scroll = this._getScroll();
@@ -4528,6 +4575,7 @@ orion.textview.TextView = (function() {
 			this._handlers = null;
 		},
 		_updateDOMSelection: function () {
+			if (!this._frameDocument) { return; }
 			if (this._ignoreDOMSelection) { return; }
 			var selection = this._getSelection();
 			var model = this._model;
@@ -4571,6 +4619,7 @@ orion.textview.TextView = (function() {
 				this._updateTimer = null;
 			}
 			var document = this._frameDocument;
+			if (!document) { return; }
 			var frameWidth = this._getFrameWidth();
 			var frameHeight = this._getFrameHeight();
 			document.body.style.width = frameWidth + "px";

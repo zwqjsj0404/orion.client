@@ -40,6 +40,7 @@ function log (text) {
 		"orion/textview/rulers",
 		"orion/textview/undoStack",
 		"examples/textview/textStyler",
+		"examples/textview/folding",
 		"tests/textview/test-performance"],   
  
 function(mKeyBinding, mTextModel, mTextView, mRulers, mUndoStack, mTextStyler) {
@@ -134,6 +135,7 @@ function(mKeyBinding, mTextModel, mTextView, mRulers, mUndoStack, mTextStyler) {
 		}
 		styler = new mTextStyler.TextStyler(view, "java");
 		view.setText(file);
+		new Folding(view, styler);
 	}
 	
 	function createJavaScriptSample() {
@@ -173,6 +175,7 @@ function(mKeyBinding, mTextModel, mTextView, mRulers, mUndoStack, mTextStyler) {
 	}
 	
 	function test() {
+		foldingTest();
 	}
 	
 	function performanceTest() {

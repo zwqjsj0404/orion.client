@@ -420,15 +420,12 @@ define(["require", "dojo", "orion/util", "orion/commands", "orion/widgets/NewIte
 			callback: function(item, commandId, domId) {
 				item = forceSingleItem(item);
 				getNewItemName(item, domId, "New File", function(name) {
-					if (name) {
-						fileClient.createFile(item.Location, name).then(
-							dojo.hitch(explorer, function() {this.changedItem(item);}),
-								function(error) {
-									serviceRegistry.getService("orion.page.message").then(function(statusService) {
-										statusService.setErrorMessage(error);
-									});
-								}
-							);
+					if (name) {		
+						serviceRegistry.getService("orion.page.message").then(function(progressService) {
+							var deferred = fileClient.createFile(item.Location, name);
+							progressService.showWhile(deferred, "Creating file " + name + "...").then(
+								dojo.hitch(explorer, function() {this.changedItem(item);}));
+						});
 					}
 				});
 			},
@@ -446,14 +443,12 @@ define(["require", "dojo", "orion/util", "orion/commands", "orion/widgets/NewIte
 			callback: function(item, commandId, domId) {
 				item = forceSingleItem(item);
 				getNewItemName(item, domId, "New Folder", function(name) {
-					if (name) {
-						fileClient.createFolder(item.Location, name).then(
-							dojo.hitch(explorer, function() {this.changedItem(item);}),
-								function(error) {
-									serviceRegistry.getService("orion.page.message").then(function(statusService) {
-										statusService.setErrorMessage(error);
-									});
-								});
+					if (name) {		
+						serviceRegistry.getService("orion.page.message").then(function(progressService) {
+							var deferred = fileClient.createFolder(item.Location, name);
+							progressService.showWhile(deferred, "Creating folder " + name + "...").then(
+								dojo.hitch(explorer, function() {this.changedItem(item);}));
+						});
 					}
 				});
 			},
@@ -472,8 +467,11 @@ define(["require", "dojo", "orion/util", "orion/commands", "orion/widgets/NewIte
 			callback: function(item, commandId, domId) {
 				getNewItemName(item, domId, "New Folder", function(name) {
 					if (name) {
-						fileClient.createProject(explorer.treeRoot.ChildrenLocation, name).then(
-							dojo.hitch(explorer, function() {this.loadResourceList(this.treeRoot.Path, true);})); // refresh the root
+						serviceRegistry.getService("orion.page.message").then(function(progressService) {
+							var deferred = fileClient.createProject(explorer.treeRoot.ChildrenLocation, name);
+							progressService.showWhile(deferred, "Creating folder " + name + "...").then(
+								dojo.hitch(explorer, function() {this.loadResourceList(this.treeRoot.Path, true);})); // refresh the root
+						});
 					}
 				});
 			},
@@ -493,8 +491,11 @@ define(["require", "dojo", "orion/util", "orion/commands", "orion/widgets/NewIte
 					title: "Link Folder",
 					label: "Folder name:",
 					func:  function(name, url, create){
-						fileClient.createProject(explorer.treeRoot.ChildrenLocation, name, url, create).then(
-							dojo.hitch(explorer, function() {this.loadResourceList(this.treeRoot.Path, true);}));//refresh the root
+						serviceRegistry.getService("orion.page.message").then(function(progressService) {
+							var deferred = fileClient.createProject(explorer.treeRoot.ChildrenLocation, name, url, create);
+							progressService.showWhile(deferred, "Linking folder " + name + " at " + url +"...").then(
+								dojo.hitch(explorer, function() {this.loadResourceList(this.treeRoot.Path, true);})); // refresh the root
+						});
 					},
 					advanced: true
 				});

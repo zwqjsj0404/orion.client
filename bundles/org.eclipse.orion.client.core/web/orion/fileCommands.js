@@ -357,8 +357,10 @@ define(["require", "dojo", "orion/util", "orion/commands", "orion/widgets/NewIte
 								}
 							}
 							if (deleteLocation) {
-								fileClient.deleteFile(deleteLocation).then(function() {
-									explorer.changedItem(refreshItem);
+								serviceRegistry.getService("orion.page.message").then(function(progressService) {
+								var deferred = fileClient.deleteFile(deleteLocation);
+									progressService.showWhile(deferred, "Deleting...").then(	
+										dojo.hitch(explorer, function() {this.changedItem(refreshItem);}));
 								});
 							}
 						}

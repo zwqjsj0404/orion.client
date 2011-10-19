@@ -24,7 +24,7 @@ define(['require', 'dojo', 'dijit', 'orion/auth', 'orion/util', 'orion/searchExp
 	function Searcher(options) {
 		this.registry= options.serviceRegistry;
 		this._commandService = options.commandService;
-		this._fileService = options.fileService;
+		this._baseSearchLocation = options.fileService.getSearchLocation();
 	}
 	Searcher.prototype = /**@lends orion.searchClient.Searcher.prototype*/ {
 		/**
@@ -78,13 +78,13 @@ define(['require', 'dojo', 'dijit', 'orion/auth', 'orion/util', 'orion/searchExp
 		 * @param {String} query The text to search for, or null when searching purely on file name
 		 * @param {String} [nameQuery] The name of a file to search for
 		 */
-		createSearchQuery: function(searchLocation, query, nameQuery)  {
+		createSearchQuery: function(query, nameQuery)  {
 			if (nameQuery) {
 				//assume implicit trailing wildcard if there isn't one already
 				var wildcard= (/\*$/.test(nameQuery) ? "" : "*");
-				return searchLocation + "Name:" + this._luceneEscape(nameQuery, true) + wildcard;
+				return this._baseSearchLocation + "Name:" + this._luceneEscape(nameQuery, true) + wildcard;
 			}
-			return searchLocation + this._luceneEscape(query);
+			return this._baseSearchLocation + this._luceneEscape(query);
 		},
 		/**
 		 * Escapes all characters in the string that require escaping in Lucene queries.

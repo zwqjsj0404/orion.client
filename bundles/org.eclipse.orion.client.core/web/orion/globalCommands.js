@@ -269,7 +269,7 @@ define(['require', 'dojo', 'dijit', 'orion/commands', 'orion/util', 'orion/textv
 				if (searchLocation) {
 					if (searchField.value.length > 0) {
 						// we create the filesearch location relative to search.html
-						var query = searcher.createSearchQuery("../filesearch?q=", searchField.value);
+						var query = searcher.createSearchQuery(searchField.value);
 						window.location = require.toUrl("search/search.html") + "#"+query;
 					}
 				} else {

@@ -390,6 +390,12 @@ eclipse.FileServiceImpl= (function() {
 					return jsonData;
 				}
 			});
+		},
+		/**
+		 * Returns the location of the search service for this file client.
+		 */
+		getSearchLocation: function() {
+			return "/filesearch?q=";
 		}
 		
 	};

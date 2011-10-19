@@ -164,6 +164,9 @@ define(['require', 'dojo'], function(require, dojo) {
 				}
 				//return the final result so it is available to caller's deferred chain
 				return result;
+			}, function(error) {
+				that.setProgressMessage("");
+				that.setErrorMessage(error);
 			});
 		},
 	

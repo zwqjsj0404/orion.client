@@ -395,7 +395,9 @@ define(["dojo", "orion/auth", "dojo/DeferredList"], function(dojo, mAuth){
 		 */		
 		remoteExport: function(sourceLocation, options) {
 			return _doServiceCall(this._getService(sourceLocation), "remoteExport", arguments);
-		}
+		},
+		
+		searchLocation: this._getService().searchLocation
 	};//end FileClient prototype
 	FileClient.prototype.constructor = FileClient;
 

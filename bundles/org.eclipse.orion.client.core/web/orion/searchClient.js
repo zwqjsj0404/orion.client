@@ -24,6 +24,7 @@ define(['require', 'dojo', 'dijit', 'orion/auth', 'orion/util', 'orion/searchExp
 	function Searcher(options) {
 		this.registry= options.serviceRegistry;
 		this._commandService = options.commandService;
+		this._fileService = options.fileService;
 	}
 	Searcher.prototype = /**@lends orion.searchClient.Searcher.prototype*/ {
 		/**

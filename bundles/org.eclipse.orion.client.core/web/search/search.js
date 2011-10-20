@@ -32,7 +32,6 @@ define(['dojo', 'orion/bootstrap', 'orion/status','orion/dialogs',
 			new mFavorites.FavoritesService({serviceRegistry: serviceRegistry});
 
 			var fileClient = new mFileClient.FileClient(serviceRegistry);
-		
 			var searcher = new mSearchClient.Searcher({serviceRegistry: serviceRegistry, commandService: commandService, fileService: fileClient});
 			var searchResultsGenerator = new mSearchResults.SearchResultsGenerator(serviceRegistry, searcher, "results", commandService, "pageActions");
 			var favorites = new mFavorites.Favorites({parent: "favoriteProgress", serviceRegistry: serviceRegistry});

@@ -391,13 +391,26 @@ eclipse.FileServiceImpl= (function() {
 				}
 			});
 		},
-		/**
-		 * Returns the location of the search service for this file client.
-		 */
-		getSearchLocation: function() {
-			return "/filesearch?q=";
-		}
 		
+		/**
+		 * Performs a search with the given query.
+		 * @param {String} query The search query
+		 */
+		search: function(query) {
+			return dojo.xhrGet({
+				url: "/filesearch" + query,
+				handleAs: "json",
+				headers: {
+					"Accept": "application/json",
+					"Orion-Version": "1"
+				},
+				sync: false,
+				timeout: 15000,
+				load: function(jsonData, ioArgs) {
+					return jsonData;
+				}
+			});
+		}
 	};
 	
 	function _call2(method, url, headers, body) {

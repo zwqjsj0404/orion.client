@@ -156,10 +156,7 @@ define(["dojo", "orion/auth", "dojo/DeferredList"], function(dojo, mAuth){
 				});
 				return d;
 			},
-			//TODO get this from a concrete file service
-			getSearchLocation: function() {
-				return "/filesearch?q=";
-			},
+			search: _noMatch,
 			createProject: _noMatch,
 			createFolder: _noMatch,
 			createFile: _noMatch,
@@ -402,11 +399,11 @@ define(["dojo", "orion/auth", "dojo/DeferredList"], function(dojo, mAuth){
 		},
 		
 		/**
-		 * Returns the location of the search service for this file client.
+		 * Performs a search with the given query.
+		 * @param {String} query The search query
 		 */
-		getSearchLocation: function() {
-			//TODO call the service impl
-			return "/filesearch?q=";
+		search: function(query) {
+			return _doServiceCall(this._getService(), "search", arguments);
 		}
 	};//end FileClient prototype
 	FileClient.prototype.constructor = FileClient;

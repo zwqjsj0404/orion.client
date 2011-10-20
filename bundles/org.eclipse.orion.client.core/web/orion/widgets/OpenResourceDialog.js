@@ -104,7 +104,7 @@ var OpenResourceDialog = dojo.declare("orion.widgets.OpenResourceDialog", [dijit
 		// Gives Webkit a chance to show the "Searching" message
 		var that = this;
 		setTimeout(function() {
-			var query = that.searcher.createSearchQuery(that.searchLocation, null, text);
+			var query = that.searcher.createSearchQuery(null, text);
 			that.searcher.search(that.results, query, false, false, dojo.hitch(that, that.decorateResult), true /*no highlight*/,true/*use flat list*/);
 		}, 0);
 	},

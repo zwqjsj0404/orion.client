@@ -11,6 +11,8 @@
  *		Silenio Quarti (IBM Corporation) - initial API and implementation
  */
 
+/*global window */
+
 /**
  * Evaluates the definition function and mixes in the returned module with
  * the module specified by <code>moduleName</code>.
@@ -18,11 +20,11 @@
  * This function is intented to by used when RequireJS is not available.
  * </p>
  *
- * @param {String} moduleName The mixin module name.
  * @param {String[]} deps The array of dependency names.
  * @param {Function} callback The definition function.
+ * @param {String} moduleName The mixin module name.
  */
-function defineGlobal(moduleName, deps, callback) {
+function defineGlobal(deps, callback, moduleName) {
     var module = this;
     var split = moduleName.split("/"), i, j;
     for (i = 0; i < split.length; i++) {
@@ -43,4 +45,7 @@ function defineGlobal(moduleName, deps, callback) {
             module[p] = newModule[p];
         }
     }
+}
+if (!window.define) {
+	window.define = defineGlobal;
 }

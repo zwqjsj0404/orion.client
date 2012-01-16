@@ -22,10 +22,10 @@ define([
 	"orion/editor/editor",
 	"orion/editor/editorFeatures",
 	"orion/editor/contentAssist",
-	"orion/editor/webContentAssist"],
+	"orion/editor/jsContentAssist",
+	"orion/editor/cssContentAssist"],
 
-function(require, mTextView, mKeyBinding, mTextStyler, mTextMateStyler, mHtmlGrammar, mEditor, mEditorFeatures, mContentAssist, mWebContentAssist){
-
+function(require, mTextView, mKeyBinding, mTextStyler, mTextMateStyler, mHtmlGrammar, mEditor, mEditorFeatures, mContentAssist, mJSContentAssist, mCSSContentAssist){
 	
 	var editorDomNode = document.getElementById("editor");
 	
@@ -43,12 +43,13 @@ function(require, mTextView, mKeyBinding, mTextStyler, mTextMateStyler, mHtmlGra
 		});
 	};
 
+	var contentAssist;
 	var contentAssistFactory = function(editor) {
-		var contentAssist = new mContentAssist.ContentAssist(editor, "contentassist");
-		contentAssist.addProvider(new mWebContentAssist.CssContentAssistProvider(), "css", "\\.css$");
-		contentAssist.addProvider(new mWebContentAssist.JavaScriptContentAssistProvider(), "js", "\\.js$");
+		contentAssist = new mContentAssist.ContentAssist(editor, "contentassist");
 		return contentAssist;
 	};
+	var cssContentAssistProvider = new mCSSContentAssist.CssContentAssistProvider();
+	var jsContentAssistProvider = new mJSContentAssist.JavaScriptContentAssistProvider();
 	
 	// Canned highlighters for js, java, and css. Grammar-based highlighter for html
 	var syntaxHighlighter = {
@@ -72,7 +73,7 @@ function(require, mTextView, mKeyBinding, mTextStyler, mTextMateStyler, mHtmlGra
 							this.styler = new mTextStyler.TextStyler(textView, extension, annotationModel);
 							break;
 						case "html":
-							this.styler = new mTextMateStyler.TextMateStyler(textView, mHtmlGrammar.HtmlGrammar().grammar);
+							this.styler = new mTextMateStyler.TextMateStyler(textView, new mHtmlGrammar.HtmlGrammar());
 							break;
 					}
 				}
@@ -148,6 +149,13 @@ function(require, mTextView, mKeyBinding, mTextStyler, mTextMateStyler, mHtmlGra
 	editor.setInput(contentName, null, initialContent);
 	syntaxHighlighter.highlight(contentName, editor);
 	editor.highlightAnnotations();
+	contentAssist.addEventListener("show", function() {
+		if (/\.css$/.test(contentName)) {
+			contentAssist.setProviders([cssContentAssistProvider]);
+		} else if (/\.js$/.test(contentName)) {
+			contentAssist.setProviders([jsContentAssistProvider]);
+		}
+	});
 	// end of code to run when content changes.
 	
 	window.onbeforeunload = function() {

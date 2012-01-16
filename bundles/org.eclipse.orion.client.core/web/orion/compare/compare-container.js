@@ -12,9 +12,9 @@
 
 define(['require', 'dojo', 'orion/compare/diff-parser', 'orion/compare/rulers', 'orion/compare/compare-inline-model', 'orion/compare/compare-2way-model', 'orion/editor/contentAssist',
         'orion/editorCommands','orion/editor/editor','orion/editor/editorFeatures','orion/globalCommands', 'orion/breadcrumbs', 'orion/compare/gap-model' , 'orion/commands',
-        'orion/textview/textModel','orion/textview/textView','examples/textview/textStyler' , 'orion/compare/compareUtils', 'orion/editor/asyncStyler', 'orion/editor/textMateStyler','orion/compare/diff-provider', 'jsdiff/diff'], 
+        'orion/textview/textModel','orion/textview/textView','examples/textview/textStyler' , 'orion/compare/compareUtils', 'orion/editor/asyncStyler', 'orion/editor/textMateStyler','orion/compare/diff-provider', 'orion/compare/jsdiffAdapter'], 
 		function(require, dojo, mDiffParser, mRulers, mCompareModel, mTwoWayCompareModel, mContentAssist, mEditorCommands, mEditor, mEditorFeatures, mGlobalCommands, mBreadcrumbs,
-				mGapModel , mCommands, mTextModel, mTextView, mTextStyler , mCompareUtils, mAsyncStyler, mTextMateStyler, mDiffProvider) {
+				mGapModel , mCommands, mTextModel, mTextView, mTextStyler , mCompareUtils, mAsyncStyler, mTextMateStyler, mDiffProvider, mJSDiffAdapter) {
 
 var exports = {};
 
@@ -53,9 +53,11 @@ exports.CompareContainer = (function() {
 				
 				this._baseFile.URL = options.baseFileURL ? options.baseFileURL : this._baseFile.URL;
 				this._baseFile.Name = options.baseFileName ? options.baseFileName : this._baseFile.Name;
+				this._baseFile.Type = options.baseFileType ? options.baseFileType : this._baseFile.Type;
 				this._baseFile.Content = options.baseFileContent ? options.baseFileContent : this._baseFile.Content;
 				this._newFile.URL = options.newFileURL ? options.newFileURL : this._newFile.URL;
 				this._newFile.Name = options.newFileName ? options.newFileName : this._newFile.Name;
+				this._newFile.Type = options.newFileType ? options.newFileType : this._newFile.Type;
 				this._newFile.Content = options.newFileContent ? options.newFileContent : this._newFile.Content;
 				
 				
@@ -155,14 +157,16 @@ exports.CompareContainer = (function() {
 			if(this._mapper){
 				return {delim:delim , mapper:this._mapper, output: output, diffArray:output};
 			}
-			
-			//var patch = JsDiff.createPatch("foo", input, output, "", "") ;
-			this._diffParser.setLineDelim(delim);
-			var result = this._diffParser.parse(input, diff, detectConflicts ,doNotBuildNewFile);
-			
-			var mapper = result.mapper;
-			var diffArray = this._diffParser.getDiffArray();
-			return {delim:delim , mapper:result.mapper, output: result.outPutFile, diffArray:diffArray};
+			if(output){
+				var adapter = new mJSDiffAdapter.JSDiffAdapter();
+				var maps = adapter.adapt(input, output);
+				return {delim:delim , mapper:maps.mapper, output: output, diffArray:maps.changContents};
+			} else {
+				this._diffParser.setLineDelim(delim);
+				var result = this._diffParser.parse(input, diff, detectConflicts ,doNotBuildNewFile);
+				var diffArray = this._diffParser.getDiffArray();
+				return {delim:delim , mapper:result.mapper, output: result.outPutFile, diffArray:diffArray};
+			}
 		},
 		
 		startup: function(onsave){
@@ -361,6 +365,7 @@ exports.TwoWayCompareContainer = (function() {
 		this._commandService = this._registry.getService("orion.page.command");
 		this._fileClient = this._registry.getService("orion.core.file");
 		this._uiFactory = uiFactory;
+		this._viewLoadedCounter = 0;
 		
 		this.setOptions(options, true);
 		
@@ -501,6 +506,10 @@ exports.TwoWayCompareContainer = (function() {
 	};
 	
 	TwoWayCompareContainer.prototype.initCommands = function(){	
+		var commandSpanId = this._uiFactory.getCommandSpanId();
+		if(!commandSpanId){
+			return;
+		}
 		var that = this;
 		var nextDiffCommand = new mCommands.Command({
 			name : "Next Diff",
@@ -531,12 +540,12 @@ exports.TwoWayCompareContainer = (function() {
 		this._commandService.addCommand(copyToLeftCommand, "dom");
 			
 		// Register command contributions
-		this._commandService.registerCommandContribution("orion.compare.prevDiff", 3, "rightContainerCommands");
-		this._commandService.registerCommandContribution("orion.compare.nextDiff", 2, "rightContainerCommands");
+		this._commandService.registerCommandContribution("orion.compare.prevDiff", 3, commandSpanId);
+		this._commandService.registerCommandContribution("orion.compare.nextDiff", 2, commandSpanId);
 		if (!this._readonly) {
-			this._commandService.registerCommandContribution("orion.compare.copyToLeft", 1, "rightContainerCommands");
+			this._commandService.registerCommandContribution("orion.compare.copyToLeft", 1, commandSpanId);
 		}
-		this._commandService.renderCommands("rightContainerCommands", "dom", that, that, "tool");
+		this._commandService.renderCommands(commandSpanId, "dom", that, that, "tool");
 	};
 	
 	TwoWayCompareContainer.prototype.nextDiff = function(){	
@@ -558,13 +567,20 @@ exports.TwoWayCompareContainer = (function() {
 		var model = new mTextModel.TextModel(content , delim);
 		var compareModel = new mTwoWayCompareModel.TwoWayCompareModel(model, {mapper:mapper, columnIndex:columnIndex } );
 		var textViewFactory = function() {
-			return new mTextView.TextView({
+			var view = new mTextView.TextView({
 				parent: editorContainerDomNode,
 				model: compareModel,
 				readonly: readOnly,
 				stylesheet: require.toUrl("orion/compare/editor.css") ,
 				tabSize: 4
 			});
+			view.addEventListener("Load", function(){
+				that._viewLoadedCounter++;
+				if(that._viewLoadedCounter === 2){				
+					that._compareMatchRenderer.matchPositionFromAnnotation(-1);
+				}
+			});
+			return view;
 		};
 			
 		var contentAssistFactory = function(editor) {
@@ -668,6 +684,7 @@ exports.TwoWayCompareContainer = (function() {
 			output = result.output;
 		}
 		var that = this;
+		this._compareMatchRenderer.init(result.mapper ,this._textViewLeft , this._textViewRight);
 		if(!this._editorLeft){
 			this.initEditorContainers(result.delim , output , input ,  result.mapper , true);
 		} else if (onsave) {
@@ -688,8 +705,9 @@ exports.TwoWayCompareContainer = (function() {
 			if(!this._readonly)
 				this._inputManager.setInput(this._newFile.URL , this._editorLeft);
 		}
-		this._compareMatchRenderer.init(result.mapper ,this._textViewLeft , this._textViewRight);
-		this._compareMatchRenderer.matchPositionFromAnnotation(-1);
+		if(this._viewLoadedCounter > 1){
+			this._compareMatchRenderer.matchPositionFromAnnotation(-1);
+		}
 	};
 	return TwoWayCompareContainer;
 }());
@@ -708,8 +726,8 @@ exports.InlineCompareContainer = (function() {
 				dojo.place(document.createTextNode(that._diffTitle), "fileNameInViewer", "only");
 				dojo.style("fileNameInViewer", "color", "#6d6d6d");
 				that._statusService.setProgressMessage("");
-				dojo.empty("rightContainerCommands");
-				that._commandService.renderCommands("rightContainerCommands", "dom", that, that, "tool");
+				dojo.empty("compare_rightContainerCommands");
+				that._commandService.renderCommands("compare_rightContainerCommands", "dom", that, that, "tool");
 			};
 		}
 		
@@ -727,7 +745,7 @@ exports.InlineCompareContainer = (function() {
 				}
 				
 				this._statusService.setProgressResult(display);
-				dojo.empty("rightContainerCommands");
+				dojo.empty("compare_rightContainerCommands");
 			};
 		}
 		

@@ -28,7 +28,6 @@ orion.GitStatusModel = (function() {
 		},
 		
 		interestedCategory: function(){
-			
 		},
 		
 		init: function(jsonData){
@@ -243,20 +242,8 @@ orion.GitStatusContentRenderer = (function() {
 			dojo.addClass(actionCol, "statusAction");
 			actionCol.noWrap= true;
 			var actionsWrapper = dojo.create("span", {id: row.id+"actionsWrapper"}, actionCol, "only");
-			// we must hide/show the span rather than the column.  IE and Chrome will not consider
-			// the mouse as being over the table row if it's in a hidden column
-			dojo.style(actionsWrapper, "visibility", "hidden");
 			this._registry.getService("orion.page.command").renderCommands(actionsWrapper, "object", {type: "fileItem", object: itemModel, rowId:row.id}, this, "tool");
 			
-			dojo.connect(row, "onmouseover", row, function() {
-				var wrapper = dojo.byId(this.id+"actionsWrapper");
-				dojo.style(wrapper, "visibility", "visible");
-			});
-			
-			dojo.connect(row, "onmouseout", row, function() {
-				var wrapper = dojo.byId(this.id+"actionsWrapper");
-				dojo.style(wrapper, "visibility", "hidden");
-			});
 			if(this._controller._model.isStaged(itemModel.type)){
 				this._controller.hasStaged = true;
 			} else {
@@ -277,20 +264,24 @@ orion.GitStatusTableRenderer = (function() {
 	}
 	GitStatusTableRenderer.prototype = {
 		render: function (renderSeparator) {
-			var headerTable = dojo.create("table", {},this._parentId);
-			var row = dojo.create("tr", null, headerTable);
-			if(this._useCheckboxSelection)
-				row.appendChild(this.getCheckboxColumn());
-			var titleCol = dojo.create("td", {}, row, "last");
-			var title = dojo.create("h2", {innerHTML: this._header}, titleCol, "last");
-			var actionCol = dojo.create("td", {nowrap :true}, row, "last");
-			var actionDiv = dojo.create("div", {}, actionCol, "last");
-			this._cmdSpan = dojo.create("span", null, actionDiv, "last");
+			var headingSection = dojo.create("div", null, this._parentId);
+			dojo.addClass(headingSection, "paneHeadingContainer paneHeadingContainerFixed");
+			var title = dojo.create("span", {id : this._type + "_header" ,innerHTML: this._header}, headingSection);
+			dojo.addClass(title, "paneHeading");
+			var localTools = dojo.create("span", null, headingSection);
+			dojo.addClass(localTools,  "paneHeadingToolbar");
 			
+			var check = dojo.create("input", {type: "checkbox"}, localTools);
+			dojo.addClass(check, "statusCheckBoxOverall");
+			this.checkBox = check;
+			dojo.connect(check, "onclick", dojo.hitch(this, function(evt) {
+				this.contentRenderer.toggleSelectAll(evt.target.checked);
+				this.renderAction();
+			}));
+			this._cmdSpan = dojo.create("span", {}, localTools, "last");
+			dojo.addClass(this._cmdSpan, "paneHeadingCommands");
 			this._statusContentId = this._parentId + "_" + this._type;
 			dojo.create("div", {id:this._statusContentId}, this._parentId, "last");
-			if(	renderSeparator)
-				dojo.create("table", {width:"100%", height:"10px"},this._parentId);
 		},
 		
 		select: function(selected){
@@ -312,24 +303,6 @@ orion.GitStatusTableRenderer = (function() {
 			
 		},
 		
-		getCheckboxColumn: function(){
-			if (this._useCheckboxSelection) {
-				var checkColumn = document.createElement('td');
-				dojo.addClass(checkColumn, "secondaryColumn");
-				
-				var check = dojo.create("input", {type: "checkbox"});
-				dojo.addClass(check, "statusCheckBoxOverall");
-				this.checkBox = check;
-				
-				checkColumn.appendChild(check);
-				dojo.connect(check, "onclick", dojo.hitch(this, function(evt) {
-					this.contentRenderer.toggleSelectAll(evt.target.checked);
-					this.renderAction();
-				}));
-				return checkColumn;
-			}
-		},
-		
 		getStatusContentId: function(){
 			return this._statusContentId;
 		},
@@ -337,7 +310,7 @@ orion.GitStatusTableRenderer = (function() {
 		renderAction:function(){
 			dojo.place(document.createTextNode(""), this._cmdSpan, "only");
 			var self = this;
-			this._registry.getService("orion.page.command").renderCommands(self._cmdSpan, "object", {type: self._type}, this, "tool");
+			this._registry.getService("orion.page.command").renderCommands(self._cmdSpan, "object", {type: self._type}, this, "button");
 		}
 	};
 	return GitStatusTableRenderer;
@@ -351,17 +324,16 @@ orion.GitCommitZoneRenderer = (function() {
 	GitCommitZoneRenderer.prototype = {
 		render: function (renderSeparator) {
 			this._commitZone = dojo.create("div", null, this._parentId, "last");
-			
-			var headerTable = dojo.create("table", {width:"100%"}, this._commitZone);
-			var row = dojo.create("tr", null, headerTable);
-			var titleCol = dojo.create("td", {nowrap :true}, row, "last");
-			dojo.create("h2", {innerHTML: "Commit message:"}, titleCol, "last");
+			var headingSection = dojo.create("div", null, this._commitZone);
+			dojo.addClass(headingSection, "paneHeadingContainer paneHeadingContainerFixed");
+			var title = dojo.create("span", {innerHTML: "Commit message"}, headingSection);
+			dojo.addClass(title, "paneHeading");
 			
 			var commitTable = dojo.create("table", null, this._commitZone);
 			var commitRow = dojo.create("tr", null, commitTable);
 			var messageCol = dojo.create("td", {nowrap :true}, commitRow, "last");
-			dojo.create("textarea", {id:"commitMessage", COLS:40, ROWS:6}, messageCol, "last");
-			
+			var text = dojo.create("textarea", {id:"commitMessage", ROWS:6}, messageCol, "last");
+			dojo.addClass(text, "pane");
 			var actionCol = dojo.create("td", {nowrap :true}, commitRow, "last");
 			var actionDiv = dojo.create("div", {style:"float: left;", align:"left"}, actionCol, "last");
 			var actionTable = dojo.create("table", null,actionDiv);
@@ -375,8 +347,6 @@ orion.GitCommitZoneRenderer = (function() {
 			var actionCol2 = dojo.create("td", {nowrap :true}, actionRow2, "last");
 			dojo.create("input", {id:"amend", type:"checkbox" ,value: "Amend", title: "Amend last commit"}, actionCol2, "last");
 			actionCol2.appendChild(document.createTextNode(" Amend"));
-			if(	renderSeparator)
-				dojo.create("table", {width:"100%", height:"10px"}, this._commitZone);
 		},
 		
 		show:function(){
@@ -474,8 +444,8 @@ orion.GitCommitterAndAuthorZoneRenderer = (function() {
 			dojo.place(document.createTextNode(""), this._cmdSpanHide, "only");
 			var self = this;
 			var service = this._registry.getService("orion.page.command");
-			service.renderCommands(self._cmdSpanShow, "dom", {type: "personIdentShow"}, this, "tool");
-			service.renderCommands(self._cmdSpanHide, "dom", {type: "personIdentHide"}, this, "tool");
+			service.renderCommands(self._cmdSpanShow, "dom", {type: "personIdentShow"}, this, "button");
+			service.renderCommands(self._cmdSpanHide, "dom", {type: "personIdentHide"}, this, "button");
 		},
 		
 		setDefaultPersonIdent:function(name, email) {
@@ -518,22 +488,20 @@ orion.GitLogTableRenderer = (function() {
 	}
 	GitLogTableRenderer.prototype = {
 		render: function (renderSeparator) {
-			dojo.create("div", {id:this._sectionId},this._parentId);
-			var headerTable = dojo.create("table", null,this._sectionId);
-			var row = dojo.create("tr", null, headerTable);
-			var titleCol = dojo.create("td", null, row, "last");
-			dojo.create("h2", {id : this._type + "_header" ,innerHTML: this._header}, titleCol, "last");
-			var cmdColAdditional = dojo.create("td", null, row, "last");
-			this._cmdSpanAdditional = dojo.create("span", {}, cmdColAdditional, "last");
-			dojo.addClass(this._cmdSpanAdditional, "statusLogCmd");
-			var cmdCol = dojo.create("td", null, row, "last");
-			this._cmdSpan = dojo.create("span", {}, cmdCol, "last");
-			dojo.addClass(this._cmdSpan, "statusLogCmd");
+			var section = dojo.create("div", {id:this._sectionId}, this._parentId);
+			var headingSection = dojo.create("div", null, section);
+			dojo.addClass(headingSection, "paneHeadingContainer paneHeadingContainerFixed");
+			var title = dojo.create("span", {id : this._type + "_header" ,innerHTML: this._header}, headingSection);
+			dojo.addClass(title, "paneHeading");
+			var localTools = dojo.create("span", null, headingSection);
+			dojo.addClass(localTools,  "paneHeadingToolbar");
+			this._cmdSpanAdditional = dojo.create("span", {}, localTools, "last");
+			dojo.addClass(this._cmdSpanAdditional, "statusLogCmd paneHeadingCommands");
+			this._cmdSpan = dojo.create("span", {}, localTools, "last");
+			dojo.addClass(this._cmdSpan, "statusLogCmd paneHeadingCommands");
 			this._logContentId = this._parentId + "_" + this._type + "_content";
-			var contentDiv = dojo.create("div", {id:this._logContentId }, this._sectionId, "last");
+			var contentDiv = dojo.create("div", {id:this._logContentId }, section, "last");
 			dojo.addClass(contentDiv, "statusLogContent");
-			if(	renderSeparator)
-				dojo.create("table", {width:"100%", height:"10px"},this._sectionId);
 		},
 		
 		getLogContentId: function(){
@@ -551,13 +519,13 @@ orion.GitLogTableRenderer = (function() {
 		renderAction:function(){
 			dojo.place(document.createTextNode(""), this._cmdSpan, "only");
 			var self = this;
-			this._registry.getService("orion.page.command").renderCommands(self._cmdSpan, "object", {type: self._type , object:self._controller}, this, "tool", true);
+			this._registry.getService("orion.page.command").renderCommands(self._cmdSpan, "object", {type: self._type , object:self._controller}, this, "button", true);
 		},
 		
 		renderAdditionalAction:function(item){
 			dojo.place(document.createTextNode(""), this._cmdSpanAdditional, "only");
 			var self = this;
-			this._registry.getService("orion.page.command").renderCommands(self._cmdSpanAdditional, "object", item, this, "tool");
+			this._registry.getService("orion.page.command").renderCommands(self._cmdSpanAdditional, "object", item, this, "button");
 		}
 	};
 	return GitLogTableRenderer;
@@ -587,7 +555,7 @@ orion.InlineCompareRenderer = (function() {
 			parent.addChild(viewerDiv);
 			if (createCommandSpan) {
 				td = document.createElement('td');
-				td.id = "rightContainerCommands"; // this id should not be known here.  It is decided in compare-container.js
+				td.id = "compare_rightContainerCommands"; // this id should not be known here.  It is decided in compare-container.js
 				row.appendChild(td);
 				td.noWrap = true;
 				row.align = "right";
@@ -897,23 +865,10 @@ orion.GitStatusController = (function() {
 					timeout : 5000,
 					load : function(jsonData, secondArg) {
 						var gitService = that._registry.getService("orion.git.provider");
-						gitService.getLog(jsonData.HeadLocation, jsonData.Id, function(scopedCommitsJsonData, secondArg) {
-							
-								function loadScopedCommitsList(scopedCommitsJsonData){
+						gitService.getLog(jsonData.HeadLocation, jsonData.Id, "Getting git incoming changes", function(scopedCommitsJsonData, secondArg) {
 									that._gitCommitNavigatorRem.renderer.setIncomingCommits(scopedCommitsJsonData.Children);
 									that._gitCommitNavigatorRem.loadCommitsList(jsonData.CommitLocation + "?page=1&pageSize=5", jsonData).then(function(){retDeffered.callback();});
 									that._remoteTableRenderer.renderAdditionalAction(that._gitCommitNavigatorRem._lastTreeRoot);
-								}
-								
-								if(secondArg.xhr.status===200){
-									loadScopedCommitsList(scopedCommitsJsonData);
-								} else if(secondArg.xhr.status===202){
-									var deferred = new dojo.Deferred();
-									deferred.callback(scopedCommitsJsonData);
-									that._registry.getService("orion.page.message").showWhile(deferred, "Getting git incoming changes").then(function(scopedCommitsJsonData){
-										loadScopedCommitsList(scopedCommitsJsonData.Result.JsonData);
-									});
-								}
 						});
 					},
 					error : function(error, ioArgs) {
@@ -932,7 +887,7 @@ orion.GitStatusController = (function() {
 		        this._gitCommitNavigatorLog = new mGitCommitNavigator.GitCommitNavigator(this._registry, null, null, {checkbox: false, minimal: true},this._logTableRenderer.getLogContentId());
 		        dojo.place(document.createTextNode(""), this._logTableRenderer.getLogContentId(), "only");
 				var path = (that._curBranch ? that._curBranch.CommitLocation :  that._model.items.CommitLocation) + "?page=1&pageSize=5";
-				dojo.xhrGet({
+				dojo.xhrGet({ //TODO Bug 367352
 					url : path,
 					headers : {
 						"Orion-Version" : "1"
@@ -956,23 +911,11 @@ orion.GitStatusController = (function() {
 									handleAs : "json",
 									timeout : 5000,
 									load : function(remoteJsonData, secondArg) {
-										that._registry.getService("orion.git.provider").getLog(remoteJsonData.CommitLocation, "HEAD", function(scopedCommitsJsonData, secondArg) {
-											function loadScopedCommitsList(scopedCommitsJsonData){
+										that._registry.getService("orion.git.provider").getLog(remoteJsonData.CommitLocation, "HEAD", "Getting git incoming changes", function(scopedCommitsJsonData) {
 												that._gitCommitNavigatorLog.renderer.setOutgoingCommits(scopedCommitsJsonData.Children);
 												that._gitCommitNavigatorLog.loadCommitsList( that._curBranch.CommitLocation +"?page=1&pageSize=5" , {Type:"LocalBranch" ,RemoteLocation: commitLogJsonData.toRef.RemoteLocation, Children: commitLogJsonData.Children}).then(function(){retDeffered.callback();});
 												if(that._curRemote)
 													that._logTableRenderer.renderAdditionalAction(that._gitCommitNavigatorLog._lastTreeRoot);
-											}
-											
-											if(secondArg.xhr.status===200){
-												loadScopedCommitsList(scopedCommitsJsonData);
-											} else if(secondArg.xhr.status===202){
-												var deferred = new dojo.Deferred();
-												deferred.callback(scopedCommitsJsonData);
-												that._registry.getService("orion.page.message").showWhile(deferred, "Getting git incoming changes").then(function(scopedCommitsJsonData){
-													loadScopedCommitsList(scopedCommitsJsonData.Result.JsonData);
-												});
-											}
 											
 										});
 									},
@@ -997,7 +940,7 @@ orion.GitStatusController = (function() {
 						} else if (ioArgs.xhr.status===202){
 							var deferred = new dojo.Deferred();
 							deferred.callback(commitLogJsonData);
-							that._registry.getService("orion.page.message").showWhile(deferred, "Getting git log").then(function(commitLogJsonData){renderCommitLogJsonData(commitLogJsonData.Result.JsonData);});
+							that._registry.getService("orion.page.progress").showWhile(deferred, "Getting git log").then(function(commitLogJsonData){renderCommitLogJsonData(commitLogJsonData.Result.JsonData);});
 						}
 						
 					},
@@ -1085,7 +1028,7 @@ orion.GitStatusController = (function() {
 			});		
 
 			var stageAllCommand = new mCommands.Command({
-				name: "Stage Selected",
+				name: "Stage",
 				tooltip: "Stage the selected changes",
 				imageClass: "git-sprite-stage_all",
 				spriteClass: "gitCommandSprite",
@@ -1099,6 +1042,26 @@ orion.GitStatusController = (function() {
 					return return_value;
 				}
 			});		
+			var savePatchCommand = new mCommands.Command({
+				name: "Save Patch",
+				tooltip: "Save workspace changes as a patch",
+				imageClass: "git-sprite-diff",
+				spriteClass: "gitCommandSprite",
+				id: "orion.gitSavePatch",
+				hrefCallback : function() {
+					var url = self._curClone.DiffLocation + "?parts=diff";
+					var selectedItems = self._unstagedContentRenderer.getSelected();
+					for (var i = 0; i < selectedItems.length; i++) {
+						url += "&Path=";
+						url += selectedItems[i].modelItem.path;
+					}
+					return url;
+				},
+				visibleWhen: function(item) {
+					var return_value = (item.type === "unstagedItems" && self.hasUnstaged && self._unstagedContentRenderer.getSelected().length > 0);
+					return return_value;
+				}
+			});
 
 			var unstageCommand = new mCommands.Command({
 				name: "Unstage",
@@ -1116,7 +1079,7 @@ orion.GitStatusController = (function() {
 			});		
 
 			var unstageAllCommand = new mCommands.Command({
-				name: "Unstage Selected",
+				name: "Unstage",
 				tooltip: "Unstage the selected changes",
 				imageClass: "git-sprite-unstage_all",
 				spriteClass: "gitCommandSprite",
@@ -1197,31 +1160,33 @@ orion.GitStatusController = (function() {
 
 			var commandService = this._registry.getService("orion.page.command");
 			// register commands with object scope
-			commandService.addCommand(sbsCompareCommand, "object");	
+			commandService.addCommand(sbsCompareCommand, "object");
 			commandService.addCommand(stageCommand, "object");	
-			commandService.addCommand(checkoutCommand, "object");	
-			commandService.addCommand(stageAllCommand, "object");	
-			commandService.addCommand(unstageAllCommand, "object");	
-			commandService.addCommand(unstageCommand, "object");	
+			commandService.addCommand(checkoutCommand, "object");
+			commandService.addCommand(stageAllCommand, "object");
+			commandService.addCommand(savePatchCommand, "object");
+			commandService.addCommand(unstageAllCommand, "object");
+			commandService.addCommand(unstageCommand, "object");
 			commandService.addCommand(resetChangesCommand, "dom");
 			commandService.addCommand(rebaseContinueCommand, "dom");
 			commandService.addCommand(rebaseSkipCommand, "dom");
 			commandService.addCommand(rebaseAbortCommand, "dom");
-			commandService.addCommand(resetChangesCommand, "dom");	
+			commandService.addCommand(resetChangesCommand, "dom");
 			commandService.addCommand(showCommitterAndAuthorPanel, "dom");
 			commandService.addCommand(hideCommitterAndAuthorPanel, "dom");
-			commandService.registerCommandContribution("orion.gitStage", 1);	
+			commandService.registerCommandContribution("orion.gitStage", 1);
 			commandService.registerCommandContribution("orion.gitCheckout", 2);	
 			commandService.registerCommandContribution("orion.gitUnstage", 3);	
 			commandService.registerCommandContribution("orion.sbsCompare", 4);	
 			commandService.registerCommandContribution("orion.gitStageAll", 5);	
-			commandService.registerCommandContribution("orion.gitUnstageAll", 6);	
+			commandService.registerCommandContribution("orion.gitUnstageAll", 6);
 			commandService.registerCommandContribution("orion.gitResetChanges", 7 , "pageActions");
 			commandService.registerCommandContribution("orion.gitRebaseContinue", 8, "rebaseActions");
 			commandService.registerCommandContribution("orion.gitRebaseSkip", 9, "rebaseActions");	
-			commandService.registerCommandContribution("orion.gitRebaseAbort", 10, "rebaseActions");	
+			commandService.registerCommandContribution("orion.gitRebaseAbort", 10, "rebaseActions");
 			commandService.registerCommandContribution("orion.showCommitterAndAuthor", 11 , "personIdentShow");
 			commandService.registerCommandContribution("orion.hideCommitterAndAuthor", 12 , "personIdentHide");
+			commandService.registerCommandContribution("orion.gitSavePatch", 13);
 		},
 
 		_generateInlineCompareCmds: function(){	
@@ -1254,9 +1219,9 @@ orion.GitStatusController = (function() {
 			this._commandService.addCommand(nextDiffCommand, "dom");
 				
 			// Register command contributions
-			this._commandService.registerCommandContribution("orion.compare.prevDiff", 2, "rightContainerCommands");
-			this._commandService.registerCommandContribution("orion.compare.nextDiff", 1, "rightContainerCommands");
-			this._commandService.renderCommands("rightContainerCommands", "dom", self, self, "tool");
+			this._commandService.registerCommandContribution("orion.compare.prevDiff", 2, "compare_rightContainerCommands");
+			this._commandService.registerCommandContribution("orion.compare.nextDiff", 1, "compare_rightContainerCommands");
+			this._commandService.renderCommands("compare_rightContainerCommands", "dom", self, self, "tool");
 		},
 		
 		startTimer: function(){
@@ -1296,7 +1261,7 @@ orion.GitStatusController = (function() {
 			this.hasUnstaged = false;
 			dojo.place(document.createTextNode("Select a file on the left to compare..."), "fileNameInViewer", "only");
 			dojo.style("fileNameInViewer", "color", "#6d6d6d");
-			dojo.empty("rightContainerCommands");
+			dojo.empty("compare_rightContainerCommands");
 		},
 
 		_createImgButton: function(enableWaitCursor ,imgParentDiv , imgSrc, imgTitle,onClick){
@@ -1488,7 +1453,7 @@ orion.GitStatusController = (function() {
 				//this.stageOneSelection(selectedItems, 0);
 				this.stageMultipleFiles(selectedItems);
 		},
-		
+
 		stageOneSelection: function (selection, index){
 			var that = this;
 			var itemModel = selection[index].modelItem;
@@ -1506,7 +1471,7 @@ orion.GitStatusController = (function() {
 				that.handleServerErrors(response, ioArgs);
 			});
 		},
-		
+
 		stageMultipleFiles: function (selection){
 			var that = this;
 			var paths = [];
@@ -1524,7 +1489,7 @@ orion.GitStatusController = (function() {
 				that.handleServerErrors(response, ioArgs);
 			});
 		},
-		
+
 		checkout: function(itemModel){
 			var self = this;
 			var location = this._model.items.CloneLocation;
@@ -1666,7 +1631,7 @@ orion.GitStatusController = (function() {
 				
 		rebase: function(action){
 			var self = this;
-			self._registry.getService("orion.git.provider").doRebase(self._curClone.HeadLocation, "", action, function(jsonData, secondArg) {
+			self._registry.getService("orion.git.provider").doRebase(self._curClone.HeadLocation, "", action, function(jsonData) {
 				if (jsonData.Result == "OK" || jsonData.Result == "ABORTED" || jsonData.Result == "FAST_FORWARD" || jsonData.Result == "UP_TO_DATE") {
 					var display = [];
 					display.Severity = "Ok";

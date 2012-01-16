@@ -7,6 +7,7 @@
 
 .commandSprite {
    background: url(../images/core_sprites.png) no-repeat top left;
+   vertical-align: middle;
 }
 
 .commandImage {
@@ -28,26 +29,52 @@
     border-radius: 3px;
 }
 
+.commandButton {
+	margin-left: 6px;
+	margin-top: 2px;
+	margin-bottom: 2px;
+	padding: 2px;
+	background: transparent;
+	font: 8pt Arial,Helvetica,Myriad,Tahoma,clean,sans-serif; 
+	color: black;
+	border: 1px solid #c3c3c3;
+    border-radius: 6px;
+    vertical-align: middle;
+    min-width: 50px;
+}
+
+commandButtonImage {
+	vertical-align: middle;
+	margin-left: 2px;
+	margin-right: 2px;
+}
+
+.commandButtonOver {
+	background: #e3e3e3;
+	border: 1px solid #9a9a9a;
+}
+
 .commandSeparator {
 }
 
 .commandLink {
-	margin-right: 12px;
+	margin-right: 6px;
+	margin-left: 6px;
 	cursor: pointer;
 }
 
 .commandLink:hover {
-	margin-right: 12px;
+	margin-right: 6px;
+	margin-left: 6px;
 	cursor: hand;
 	text-decoration: underline;
 }
 
+/* placeholders for possible hover states on command items */
 .commandActiveItem {
-	opacity: 1.0;
 }
 
 .commandInactiveItem {
-	opacity: 0.3;
 }
 
 /* sprites for the core plugin, need to figure out where these really live */
@@ -137,16 +164,16 @@
 .nihilo .textless .dijitArrowButtonInner {
 	background-position: 0px 0px; 
 	width: 16px; height: 16px; 
-	background: url(../images/gear.gif) no-repeat top left; 
+	background: url(../images/menu.gif) no-repeat top left; 
 	display: inline-block; 
 	vertical-align: middle; 
 }
 
-/* this keeps the default gray hover from happening for the gear node */
-.nihilo .textless .dijitButtonNode, .nihilo .textless .dijitButtonNodeHover, .nihilo .textless .dijitButtonNodeActive {
+/* this keeps the default gray hover from happening for menu node */
+.nihilo .textless .dijitButtonNode {
     color: black;
     background-color: transparent;
-    padding-left: 8px;
+    margin: 1px;
 }
 
 .nihilo .dijitTooltip {

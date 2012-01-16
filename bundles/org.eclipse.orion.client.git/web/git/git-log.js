@@ -11,11 +11,11 @@
 
 /*global window define document dijit */
 /*browser:true*/
-define(['require', 'dojo', 'orion/bootstrap', 'orion/status', 'orion/commands',
-        'orion/auth', 'orion/dialogs', 'orion/selection', 'orion/fileClient', 'orion/taskClient', 'orion/searchClient', 'orion/globalCommands', 'orion/git/gitClient',
+define(['require', 'dojo', 'orion/bootstrap', 'orion/status', 'orion/progress', 'orion/commands',
+        'orion/auth', 'orion/dialogs', 'orion/selection', 'orion/fileClient', 'orion/operationsClient', 'orion/searchClient', 'orion/globalCommands', 'orion/git/gitClient',
         'orion/breadcrumbs', 'orion/ssh/sshTools', 'orion/git/git-commit-details', 'orion/git/git-commit-navigator', 'orion/git/gitCommands',
 	    'orion/links', 'dojo/parser', 'dojo/hash', 'dijit/layout/BorderContainer', 'dijit/layout/ContentPane', 'orion/widgets/eWebBorderContainer'], 
-		function(require, dojo, mBootstrap, mStatus, mCommands, mAuth, mDialogs, mSelection, mFileClient, mTaskClient,
+		function(require, dojo, mBootstrap, mStatus, mProgress, mCommands, mAuth, mDialogs, mSelection, mFileClient, mOperationsClient,
 					mSearchClient, mGlobalCommands, mGitClient, mBreadcrumbs, mSshTools, mGitCommitDetails, mGitCommitNavigator, mGitCommands, mLinks) {
 
 // TODO: This is naughty -- feel bad and then fix it please
@@ -28,8 +28,9 @@ var serviceRegistry;
 			document.body.style.visibility = "visible";
 			dojo.parser.parse();
 			
-		
-			new mStatus.StatusReportingService(serviceRegistry, new mTaskClient.TaskClient(serviceRegistry), "statusPane", "notifications");
+			var operationsClient = new mOperationsClient.OperationsClient(serviceRegistry);
+			new mStatus.StatusReportingService(serviceRegistry, operationsClient, "statusPane", "notifications");
+			new mProgress.ProgressService(serviceRegistry, operationsClient);
 			new mDialogs.DialogService(serviceRegistry);
 			var selection = new mSelection.Selection(serviceRegistry);
 			new mSshTools.SshService(serviceRegistry);
@@ -94,7 +95,7 @@ var serviceRegistry;
 
 function loadResource(navigator, searcher){
 	var path = dojo.hash();
-	dojo.xhrGet({
+	dojo.xhrGet({ //TODO Bug 367352
 		url : path,
 		headers : {
 			"Orion-Version" : "1"
@@ -111,25 +112,11 @@ function loadResource(navigator, searcher){
 				navigator.loadCommitDetails(null);
 				
 				if (resource.Type === "RemoteTrackingBranch"){
-					var gitService = serviceRegistry.getService("orion.git.provider")
-					gitService.getLog(resource.HeadLocation, resource.Id, function(scopedCommitsJsonData, secondArg) {
-						
-						function loadScopedCommitsList(scopedCommitsJsonData){
+					var gitService = serviceRegistry.getService("orion.git.provider");
+					gitService.getLog(resource.HeadLocation, resource.Id, "Getting git incoming changes", function(scopedCommitsJsonData) {
 							navigator.renderer.setIncomingCommits(scopedCommitsJsonData.Children);
 							navigator.renderer.setOutgoingCommits([]);
-							navigator.loadCommitsList(resource.CommitLocation + "?" + new dojo._Url(path).query, resource);									
-						}
-						
-						if(secondArg.xhr.status===200){
-							loadScopedCommitsList(scopedCommitsJsonData);
-						} else if(secondArg.xhr.status===202){
-							var deferred = new dojo.Deferred();
-							deferred.callback(scopedCommitsJsonData);
-							serviceRegistry.getService("orion.page.message").showWhile(deferred, "Getting git incoming changes").then(function(resourceData){
-								loadScopedCommitsList(resourceData.Result.JsonData);
-							});
-						}
-						
+							navigator.loadCommitsList(resource.CommitLocation + "?" + new dojo._Url(path).query, resource);															
 					});
 				} else if (resource.toRef){
 					if (resource.toRef.RemoteLocation && resource.toRef.RemoteLocation.length===1 && resource.toRef.RemoteLocation[0].Children && resource.toRef.RemoteLocation[0].Children.length===1)
@@ -142,23 +129,10 @@ function loadResource(navigator, searcher){
 							timeout : 5000,
 							load : function(remoteJsonData, secondArg) {
 								var gitService = serviceRegistry.getService("orion.git.provider");
-								gitService.getLog(remoteJsonData.CommitLocation, "HEAD", function(scopedCommitsJsonData, secondArg) {
-									function loadScopedCommitsList(scopedCommitsJsonData){
+								gitService.getLog(remoteJsonData.CommitLocation, "HEAD", "Getting git outgoing changes", function(scopedCommitsJsonData) {
 										navigator.renderer.setIncomingCommits([]);
 										navigator.renderer.setOutgoingCommits(scopedCommitsJsonData.Children);
 										navigator.loadCommitsList(dojo.hash(), resource);
-									}
-									
-									if(secondArg.xhr.status===200){
-										loadScopedCommitsList(scopedCommitsJsonData);
-									} else if(secondArg.xhr.status===202){
-										var deferred = new dojo.Deferred();
-										deferred.callback(scopedCommitsJsonData);
-										serviceRegistry.getService("orion.page.message").showWhile(deferred, "Getting git outgoing changes").then(function(resourceData){
-											loadScopedCommitsList(resourceData.Result.JsonData);
-										});
-									}
-									
 								});
 							},
 							error : function(error, ioArgs){
@@ -177,7 +151,7 @@ function loadResource(navigator, searcher){
 			} else if(secondArg.xhr.status===202){
 				var deferred = new dojo.Deferred();
 				deferred.callback(resource);
-				serviceRegistry.getService("orion.page.message").showWhile(deferred, "Getting git log").then(function(resourceData){
+				serviceRegistry.getService("orion.page.progress").showWhile(deferred, "Getting git log").then(function(resourceData){
 					loadResource(resourceData.Result.JsonData);
 				});
 			}			

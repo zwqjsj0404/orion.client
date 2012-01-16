@@ -278,7 +278,8 @@ define(['require', 'dojo', 'dijit', 'orion/commands', 'orion/util', 'orion/textv
 		'</tr>' +
 	// Row 3:  Status on left, global commands, search, user, etc. on right
 		'<tr class="topRowBanner" id="bannerRow3">' +
-			'<td colspan=2 style="height: 16px; text-align: left">' +
+			'<td colspan=2 style="height: 16px; text-align: left; vertical-align: bottom;">' +
+				'<span style="width: 16px; height: 16px; padding-right: 8px; text-align: right;"><a id="progressPane"></a></span>' +
 				'<span id="statusPane" style="color: #5a5a5a;"></span>' +
 				'<span id="notifications"></span>' +
 			'</td>' +
@@ -345,7 +346,13 @@ define(['require', 'dojo', 'dijit', 'orion/commands', 'orion/util', 'orion/textv
 	
 	function getAuthenticationIds(){
 		return authenticationIds;
-	}	
+	}
+	
+	function startProgressService(serviceRegistry){
+		var progressService = serviceRegistry.getService("orion.page.progress");
+		if(progressService)
+			dojo.hitch(progressService, progressService.init)("progressPane");
+	}
 
 	/**
 	 * Adds the user-related commands to the toolbar
@@ -402,6 +409,7 @@ define(['require', 'dojo', 'dijit', 'orion/commands', 'orion/util', 'orion/textv
 				});							
 			});
 		}
+		
 	}
 	
 	function setPendingAuthentication(services){
@@ -666,6 +674,8 @@ define(['require', 'dojo', 'dijit', 'orion/commands', 'orion/util', 'orion/textv
 		}
 		
 		generateUserInfo(serviceRegistry);
+		startProgressService(serviceRegistry);
+
 		
 		// generate the footer. 
 		// TODO The footer div id should not be assumed here

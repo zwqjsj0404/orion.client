@@ -148,6 +148,14 @@ a:hover {
 	padding-right: 8px;
 }
 
+.actionsColumn {
+	min-width: 300px;
+	text-align: right;
+	padding-left: 16px;
+	vertical-align: middle;
+	height: 24px;  /* breathing room */
+}
+
 .selectionTools {
 	vertical-align: middle;
 }
@@ -243,6 +251,7 @@ a:hover {
    	margin: 0;
     padding: 0;
     background: #FFFFFF;
+    min-width: 300px;
 }
 
 .paneHeading {
@@ -250,17 +259,24 @@ a:hover {
 	font-weight: bold;
 	color: #666666;
 	vertical-align: middle;
+	margin-right: 16px;
 }
 
 .paneHeadingToolbar {
 	text-align: right;
 	vertical-align: middle;
-	height: 30px;
+	margin-left: 16px;
+}
+
+.paneHeadingContainerFixed {
+	min-width: 300px;
 }
 
 .paneHeadingContainer {
 	border-bottom: 1px dotted #bfbfbf;
-	height: 30px;
+	margin: 8px;
+	padding-top: 8px;
+	padding-bottom: 4px;
 }
 
 .paneHeadingCommands {
@@ -372,6 +388,34 @@ a:hover {
 	font-size: 1.2em;
 	padding-left: 8px;
 	padding-right: 8px;
+}
+
+.progressPane {
+	padding-left: 8px;
+	padding-right: 8px;
+	vertical-align: bottom;
+	background-position: 0px 0px; 
+	text-align: right;
+}
+
+.progressPane_operations {
+	background: url(../images/progress_none.gif) no-repeat center;  /* TODO move icon to sprite*/
+}
+
+.progressPane_running {
+	background: url(../images/progress_running.gif) no-repeat center;  /* TODO move icon to sprite*/
+}
+
+.progressPane_error {
+	background: url(../images/progress_error.gif) no-repeat center;  /* TODO move icon to sprite*/
+}
+
+.progressPane_warning {
+	background: url(../images/progress_warning.gif) no-repeat center;  /* TODO move icon to sprite*/
+}
+
+.progressPane_empty {
+	background: inherit;
 }
 
 .toolbar {
@@ -621,13 +665,19 @@ a:hover {
 }
 
 .favoritesTable {
-	border-spacing: 0;
+	border-collapse: separate;
+	border-spacing: 2;
 	overflow-x: hidden; /* because it is placed inside a div with overflow scrollbars */
 }
 
 .secondaryColumn {
 	color: #666666;	
 	padding-right: 8px;
+}
+
+.primaryColumn {
+	color: #024892;
+	text-decoration: none;
 }
 
 .checkColumn {
@@ -663,7 +713,7 @@ a:hover {
 	cursor: default;
 	overflow: auto;
 	height: 150px;
-	width: 200px;
+	width: 300px;
 }
 
 .contentassist .selected {

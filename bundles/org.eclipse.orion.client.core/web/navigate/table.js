@@ -12,27 +12,25 @@
 /*global define document dojo dijit window eclipse orion serviceRegistry:true widgets alert*/
 /*browser:true*/
 
-define(['dojo', 'dijit', 'orion/bootstrap', 'orion/selection', 'orion/status', 'orion/dialogs',
-        'orion/ssh/sshTools', 'orion/commands', 'orion/favorites', 'orion/searchClient', 'orion/fileClient', 'orion/taskClient', 'orion/globalCommands',
+define(['dojo', 'dijit', 'orion/bootstrap', 'orion/selection', 'orion/status', 'orion/progress', 'orion/dialogs',
+        'orion/ssh/sshTools', 'orion/commands', 'orion/favorites', 'orion/navoutliner', 'orion/searchClient', 'orion/fileClient', 'orion/operationsClient', 'orion/globalCommands',
         'orion/fileCommands', 'orion/explorer-table', 'orion/util', 'orion/contentTypes',
         'dojo/parser', 'dijit/layout/BorderContainer', 'dijit/layout/ContentPane', 'orion/widgets/eWebBorderContainer'], 
-		function(dojo, dijit, mBootstrap, mSelection, mStatus, mDialogs, mSsh, mCommands, mFavorites, 
-				mSearchClient, mFileClient, mTaskClient, mGlobalCommands, mFileCommands, mExplorerTable, mUtil, mContentTypes) {
+		function(dojo, dijit, mBootstrap, mSelection, mStatus, mProgress, mDialogs, mSsh, mCommands, mFavorites, mNavOutliner,
+				mSearchClient, mFileClient, mOperationsClient, mGlobalCommands, mFileCommands, mExplorerTable, mUtil, mContentTypes) {
 
 dojo.addOnLoad(function(){
 	mBootstrap.startup().then(function(core) {
 		var serviceRegistry = core.serviceRegistry;
 		var preferences = core.preferences;
-		var selection = new mSelection.Selection(serviceRegistry);		
-		new mStatus.StatusReportingService(serviceRegistry, new mTaskClient.TaskClient(serviceRegistry), "statusPane", "notifications");
+		var selection = new mSelection.Selection(serviceRegistry);
+		var operationsClient = new mOperationsClient.OperationsClient(serviceRegistry);
+		new mStatus.StatusReportingService(serviceRegistry, operationsClient, "statusPane", "notifications");
+		new mProgress.ProgressService(serviceRegistry, operationsClient);
 		new mDialogs.DialogService(serviceRegistry);
 		new mSsh.SshService(serviceRegistry);
-		
-		var commandService = new mCommands.CommandService({serviceRegistry: serviceRegistry, selection: selection});
-	
-		
-		// Favorites
 		new mFavorites.FavoritesService({serviceRegistry: serviceRegistry});
+		var commandService = new mCommands.CommandService({serviceRegistry: serviceRegistry, selection: selection});
 		
 		// Git operations
 		//new eclipse.GitService(serviceRegistry);
@@ -45,9 +43,9 @@ dojo.addOnLoad(function(){
 					
 //		var fileServices = serviceRegistry.getServiceReferences("orion.core.file");
 
-		var contentTypes = new mContentTypes.ContentTypes(serviceRegistry);
+		var contentTypeService = new mContentTypes.ContentTypeService(serviceRegistry);
 		var explorer = new mExplorerTable.FileExplorer({serviceRegistry: serviceRegistry, treeRoot: treeRoot, selection: selection, searcher: searcher, 
-				fileClient: fileClient, commandService: commandService, contentTypes: contentTypes,
+				fileClient: fileClient, commandService: commandService, contentTypeService: contentTypeService,
 				parentId: "explorer-tree", breadcrumbId: "location", toolbarId: "pageActions", selectionToolsId: "selectionTools"});
 		
 		function refresh() {
@@ -58,7 +56,7 @@ dojo.addOnLoad(function(){
 			explorer.loadResourceList(dojo.hash());
 		}
 	
-		var favorites = new mFavorites.Favorites({parent: "favoriteProgress", serviceRegistry: serviceRegistry});
+		var navOutliner = new mNavOutliner.NavigationOutliner({parent: "favoriteProgress", serviceRegistry: serviceRegistry});
 							
 		// global commands
 		mGlobalCommands.generateBanner("toolbar", serviceRegistry, commandService, preferences, searcher, explorer);
@@ -125,7 +123,7 @@ dojo.addOnLoad(function(){
 		dojo.connect(explorer, "onchange", function(item) {
 			var title = "Navigator";
 			if (item) {
-				var name = mUtil.isAtRoot(item.Location) ? mUtil.getUserName() : item.Name;
+				var name = mUtil.isAtRoot(item.Location) ? fileClient.fileServiceName(item.Location) : item.Name;
 				if (name) {
 					title = "/" + name + " - " + title;
 				}

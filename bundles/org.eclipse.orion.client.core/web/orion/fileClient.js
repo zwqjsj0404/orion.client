@@ -220,9 +220,22 @@ define(["dojo", "orion/auth", "dojo/DeferredList"], function(dojo, mAuth){
 			var i = this._getServiceIndex(location);
 			return i === -1 ? _allFileSystemsService.Name : _names[i];
 		};
+		
+		this._getServiceRootLocation = function(location) {
+			var i = this._getServiceIndex(location);
+			return i === -1 ? "/" : _fileSystemsRoots[i].ChildrenLocation;
+		};
 	}
 	
 	FileClient.prototype = /**@lends orion.fileClient.FileClient.prototype */ {
+		/**
+		 * Returns the location of the root for the file service managing this location
+		 * @param location The location of the item 
+		 */
+		rootLocation: function(location) {
+			return this._getServiceRootLocation(location);
+		},
+		
 		/**
 		 * Returns the name of the file service managing this location
 		 * @param location The location of the item 

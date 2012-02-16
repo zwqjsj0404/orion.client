@@ -77,6 +77,32 @@ define(['require', 'dojo', 'dijit', 'orion/util', 'dijit/Menu', 'dijit/form/Drop
 			this.options = arguments[0] || {};
 		},
 		
+		_onHover: function(/*DomNode*/ target){
+			// overridden in Orion to watch for connectNode disappearing
+			// summary:
+			//		Despite the name of this method, it actually handles both hover and focus
+			//		events on the target node, setting a timer to show the tooltip.
+			// tags:
+			//		private
+			this.inherited(arguments);
+			// despite what the documentation for _onHover says above, parameter target is the event, not the event target
+			if (target) {
+				var targetNode = target.target ? target.target : target.srcElement;  // normalize.  srcElement is IE
+				if (targetNode) {
+					if (this._connectHandle) {
+						dojo.disconnect(this._connectHandle);
+					}
+					this._connectHandle = dojo.connect(targetNode, "DOMNodeRemovedFromDocument", this, function() {
+						if (this._connectHandle) {
+							dojo.disconnect(this._connectHandle);
+							this._connectHandle = null;
+						}
+						this.close();
+					});
+				}
+			}
+		},
+		
 		_onUnHover: function(evt){
 			// comment out line below from dijit implementation
 			// if(this._focus){ return; }
@@ -84,6 +110,10 @@ define(['require', 'dojo', 'dijit', 'orion/util', 'dijit/Menu', 'dijit/form/Drop
 			if(this._showTimer){
 				window.clearTimeout(this._showTimer);
 				delete this._showTimer;
+			}
+			if (this._connectHandle) {
+				dojo.disconnect(this._connectHandle);
+				this._connectHandle = null;
 			}
 			this.close();
 		}, 
@@ -94,12 +124,7 @@ define(['require', 'dojo', 'dijit', 'orion/util', 'dijit/Menu', 'dijit/form/Drop
 				if (dijit.byId(this.options.commandParent.id)) {
 					// this is a menu
 					dojo.connect(this.options.commandParent, "onClose", dojo.hitch(this, function() {this.close();}));
-				} else {
-					if (this.options.commandService) {
-						this.options.commandService.whenHidden(this.options.commandParent, 
-							dojo.hitch(this, function() {this.close();}));
-					}
-				}				
+				} 			
 			}
 		}
 	});

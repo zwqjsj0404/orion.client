@@ -10,8 +10,8 @@
  ******************************************************************************/
 /*global define document navigator*/
 
-define(['require', 'dojo', 'dijit', 'orion/commands', 'orion/editor/regex', 'orion/searchUtils', 'dijit/Menu', 'dijit/MenuItem', 'dijit/form/DropDownButton' ], 
-	function(require, dojo, dijit, mCommands, mRegex, mSearchUtils){
+define(['require', 'orion/textview/annotations', 'dojo', 'dijit', 'orion/commands', 'orion/editor/regex', 'orion/searchUtils', 'dijit/Menu', 'dijit/MenuItem', 'dijit/form/DropDownButton' ], 
+	function(require, mAnnotations, dojo, dijit, mCommands, mRegex, mSearchUtils){
 	
 var orion = orion || {};
 
@@ -114,7 +114,7 @@ orion.TextSearcher = (function() {
 						} else {
 							var annotationModel = that._editor.getAnnotationModel();
 							if(annotationModel){
-								annotationModel.removeAnnotations("orion.annotation.matchingSearch");
+								annotationModel.removeAnnotations(mAnnotations.AnnotationType.ANNOTATION_MATCHING_SEARCH);
 							}
 						}
 					}
@@ -236,15 +236,15 @@ orion.TextSearcher = (function() {
 			this._editor.getTextView().focus();
 			var annotationModel = this._editor.getAnnotationModel();
 			if (annotationModel) {
-				annotationModel.removeAnnotations("orion.annotation.currentSearch");
-				annotationModel.removeAnnotations("orion.annotation.matchingSearch");
+				annotationModel.removeAnnotations(mAnnotations.AnnotationType.ANNOTATION_CURRENT_SEARCH);
+				annotationModel.removeAnnotations(mAnnotations.AnnotationType.ANNOTATION_MATCHING_SEARCH);
 			}
 		},
 
 		removeCurrentAnnotation: function(evt){
 			var annotationModel = this._editor.getAnnotationModel();
 			if (annotationModel) {
-				annotationModel.removeAnnotations("orion.annotation.currentSearch");
+				annotationModel.removeAnnotations(mAnnotations.AnnotationType.ANNOTATION_CURRENT_SEARCH);
 			}
 		},
 		
@@ -501,8 +501,8 @@ orion.TextSearcher = (function() {
 			if(!searchStr || searchStr.length === 0){
 				var annotationModel = this._editor.getAnnotationModel();
 				if(annotationModel){
-					annotationModel.removeAnnotations("orion.annotation.currentSearch");
-					annotationModel.removeAnnotations("orion.annotation.matchingSearch");
+					annotationModel.removeAnnotations(mAnnotations.AnnotationType.ANNOTATION_CURRENT_SEARCH);
+					annotationModel.removeAnnotations(mAnnotations.AnnotationType.ANNOTATION_MATCHING_SEARCH);
 				}
 				return null;
 			}
@@ -583,9 +583,10 @@ orion.TextSearcher = (function() {
 		},
 		
 		adaptFind: function(startIndex, endIndex, reverse, callBack, noStatus) {
+			var type = mAnnotations.AnnotationType.ANNOTATION_CURRENT_SEARCH;
 			var annotationModel = this._editor.getAnnotationModel();
 			if(annotationModel){
-				annotationModel.removeAnnotations("orion.annotation.currentSearch");
+				annotationModel.removeAnnotations(type);
 			}
 			if(startIndex === -1){
 				if(!noStatus) {
@@ -597,27 +598,19 @@ orion.TextSearcher = (function() {
 					this._editor.reportStatus("");
 				}
 				if (annotationModel) {
-					annotationModel.addAnnotation({
-						type: "orion.annotation.currentSearch",
-						start: startIndex,
-						end: endIndex,
-						title: "Current Search",
-						style: {styleClass: "annotation currentSearch"},
-						html: "<div class='annotationHTML currentSearch'></div>",
-						overviewStyle: {styleClass: "annotationOverview currentSearch"},
-						rangeStyle: {styleClass: "annotationRange currentSearch"}
-					});
+					annotationModel.addAnnotation(mAnnotations.AnnotationType.createAnnotation(type, startIndex, endIndex));
 				}
 				this._editor.moveSelection(startIndex, endIndex, callBack, false);
 			}
 		},
 		
 		adaptAllOccurrence: function(singleResult, isRegEx, caseSensitive) {
+			var type = mAnnotations.AnnotationType.ANNOTATION_MATCHING_SEARCH;
 			var annotationModel = this._editor.getAnnotationModel();
 			if(!annotationModel){
 				return;
 			}
-			annotationModel.removeAnnotations("orion.annotation.matchingSearch");
+			annotationModel.removeAnnotations(type);
 			if(!singleResult){
 				return;
 			}
@@ -640,16 +633,7 @@ orion.TextSearcher = (function() {
 					var startIndex = lineStart + detailModel.matches[i].startIndex;
 					var endIndex = startIndex + gap;
 					if (annotationModel) {
-						annotationModel.addAnnotation({
-							type: "orion.annotation.matchingSearch",
-							start: startIndex,
-							end: endIndex,
-							title: "Search",
-							style: {styleClass: "annotation matchingSearch"},
-							html: "<div class='annotationHTML matchingSearch'></div>",
-							overviewStyle: {styleClass: "annotationOverview matchingSearch"},
-							rangeStyle: {styleClass: "annotationRange matchingSearch"}
-						});
+						annotationModel.addAnnotation(mAnnotations.AnnotationType.createAnnotation(type, startIndex, endIndex));
 					}
 				}
 			}

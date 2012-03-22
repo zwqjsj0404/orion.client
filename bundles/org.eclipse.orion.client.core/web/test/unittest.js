@@ -159,6 +159,11 @@ dojo.addOnLoad(function() {
 			var testServiceRegistry = new mServiceRegistry.ServiceRegistry();
 			var testPluginRegistry = new mPluginRegistry.PluginRegistry(testServiceRegistry, {});
 			
+			// must do things differently if we are runing a javascript file vs an html file
+			if (fileURI.substring(fileURI.length - 3, fileURI.length) === ".js") {
+				fileURI = "testHook.html#" + fileURI;
+			}
+			
 			testPluginRegistry.installPlugin(fileURI).then(function() {
 				var service = testServiceRegistry.getService("orion.test.runner");
 				//console.log("got service: " + service);

@@ -544,6 +544,98 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 				return true;
 			}.bind(this));
 			
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(107, true), messages.expand);
+			this.textView.setAction(messages.expand, function() {
+				var editor = this.editor;
+				var annotationModel = editor.getAnnotationModel();
+				if(!annotationModel) { return true; }
+				var model = editor.getModel();
+				var currentOffset = editor.getCaretOffset();
+				var lineIndex = model.getLineAtOffset(currentOffset);
+				var start = model.getLineStart(lineIndex);
+				var end = model.getLineEnd(lineIndex, true);
+				if (model.getBaseModel) {
+					start = model.mapOffset(start);
+					end = model.mapOffset(end);
+					model = model.getBaseModel();
+				}
+				var annotation, iter = annotationModel.getAnnotations(start, end);
+				while (!annotation && iter.hasNext()) {
+					var a = iter.next();
+					if (a.type !== mAnnotations.AnnotationType.ANNOTATION_FOLDING) { continue; }
+					annotation = a;
+				}
+				if (annotation && !annotation.expanded) {
+					annotation.expand();
+					annotationModel.modifyAnnotation(annotation);
+				}
+				return true;
+			}.bind(this));
+			
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(109, true), messages.collapse);
+			this.textView.setAction(messages.collapse, function() {
+				var editor = this.editor;
+				var annotationModel = editor.getAnnotationModel();
+				if(!annotationModel) { return true; }
+				var model = editor.getModel();
+				var currentOffset = editor.getCaretOffset();
+				var lineIndex = model.getLineAtOffset(currentOffset);
+				var start = model.getLineStart(lineIndex);
+				var end = model.getLineEnd(lineIndex, true);
+				if (model.getBaseModel) {
+					start = model.mapOffset(start);
+					end = model.mapOffset(end);
+					model = model.getBaseModel();
+				}
+				var annotation, iter = annotationModel.getAnnotations(start, end);
+				while (!annotation && iter.hasNext()) {
+					var a = iter.next();
+					if (a.type !== mAnnotations.AnnotationType.ANNOTATION_FOLDING) { continue; }
+					annotation = a;
+				}
+				if (annotation && annotation.expanded) {
+					annotation.collapse();
+					annotationModel.modifyAnnotation(annotation);
+				}
+				return true;
+			}.bind(this));
+			
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(106, true), messages.expandAll);
+			this.textView.setAction(messages.expandAll, function() {
+				var editor = this.editor;
+				var annotationModel = editor.getAnnotationModel();
+				if(!annotationModel) { return true; }
+				var model = editor.getModel();
+				var annotation, iter = annotationModel.getAnnotations(0, model.getCharCount());
+				while (iter.hasNext()) {
+					annotation = iter.next();
+					if (annotation.type !== mAnnotations.AnnotationType.ANNOTATION_FOLDING) { continue; }
+					if (!annotation.expanded) {
+						annotation.expand();
+						annotationModel.modifyAnnotation(annotation);
+					}
+				}
+				return true;
+			}.bind(this));
+			
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(111, true), messages.collapseAll);
+			this.textView.setAction(messages.collapseAll, function() {
+				var editor = this.editor;
+				var annotationModel = editor.getAnnotationModel();
+				if(!annotationModel) { return true; }
+				var model = editor.getModel();
+				var annotation, iter = annotationModel.getAnnotations(0, model.getCharCount());
+				while (iter.hasNext()) {
+					annotation = iter.next();
+					if (annotation.type !== mAnnotations.AnnotationType.ANNOTATION_FOLDING) { continue; }
+					if (annotation.expanded) {
+						annotation.collapse();
+						annotationModel.modifyAnnotation(annotation);
+					}
+				}
+				return true;
+			}.bind(this));
+			
 			var isMac = navigator.platform.indexOf("Mac") !== -1;
 			this.textView.setKeyBinding(new mKeyBinding.KeyBinding("q", !isMac, false, false, isMac), messages.lastEdit);
 			this.textView.setAction(messages.lastEdit, function() {

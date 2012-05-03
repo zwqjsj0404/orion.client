@@ -13,7 +13,7 @@
 /*browser:true*/
 define(['require', 'dojo', 'orion/commands', 'orion/util', 'orion/git/util', 'orion/git/widgets/CloneGitRepositoryDialog', 
         'orion/git/widgets/AddRemoteDialog', 'orion/git/widgets/GitCredentialsDialog', 'orion/widgets/NewItemDialog', 
-        'orion/git/widgets/RemotePrompterDialog', 'orion/git/widgets/ApplyPatchDialog', 'orion/git/widgets/OpenCommitDialog'], 
+        'orion/git/widgets/RemotePrompterDialog', 'orion/git/widgets/ApplyPatchDialog', 'orion/git/widgets/OpenCommitDialog', 'orion/git/widgets/ContentDialog'], 
         function(require, dojo, mCommands, mUtil, mGitUtil) {
 
 /**
@@ -868,7 +868,7 @@ var exports = {};
 					return true;
 				if (item.Type === "Remote")
 					return true;
-				if (item.Type === "Commit" && item.toRef.Type === "RemoteTrackingBranch")
+				if (item.Type === "Commit" && item.toRef && item.toRef.Type === "RemoteTrackingBranch")
 					return true;
 				return false;
 			}
@@ -956,7 +956,7 @@ var exports = {};
 					return true;
 				if (item.Type === "Remote")
 					return true;
-				if (item.Type === "Commit" && item.toRef.Type === "RemoteTrackingBranch")
+				if (item.Type === "Commit" && item.toRef && item.toRef.Type === "RemoteTrackingBranch")
 					return true;
 				return false;
 			}
@@ -1027,7 +1027,7 @@ var exports = {};
 					return true;
 				if (item.Type === "Branch" && !item.Current)
 					return true;
-				if (item.Type === "Commit" && item.toRef.Type === "RemoteTrackingBranch")
+				if (item.Type === "Commit" && item.toRef && item.toRef.Type === "RemoteTrackingBranch")
 					return true;
 				return false;
 			}
@@ -1385,7 +1385,7 @@ var exports = {};
 			tooltip: "Show the log for the corresponding remote tracking branch",
 			id : "eclipse.orion.git.switchToRemote",
 			hrefCallback : function(data) {
-				return require.toUrl("git/git-log.html")+"#" + data.items.toRef.RemoteLocation[0].Children[0].Location + "?page=1";
+				return require.toUrl("git/git-log.html")+"#" + data.items.toRef.RemoteLocation[0].Children[0].CommitLocation + "?page=1";
 			},
 			visibleWhen : function(item) {
 				return item.toRef != null && item.toRef.Type === "Branch" && item.toRef.Current && item.toRef.RemoteLocation && item.toRef.RemoteLocation.length===1 && item.toRef.RemoteLocation[0].Children.length===1;
@@ -1454,7 +1454,7 @@ var exports = {};
 			visibleWhen : function(item) {
 				if (item.Type === "RemoteTrackingBranch")
 					return true;
-				if (item.Type === "Commit" && item.toRef.Type === "RemoteTrackingBranch")
+				if (item.Type === "Commit" && item.toRef && item.toRef.Type === "RemoteTrackingBranch")
 					return true;
 
 				try {
@@ -2139,6 +2139,28 @@ var exports = {};
 		});
 		commandService.addCommand(applyPatchCommand);
 		
+		var showContentCommand = new mCommands.Command({
+			name : "Show content",
+			tooltip: "Apply a patch on the selected repository",
+			id : "eclipse.orion.git.showContent",
+			imageClass: "git-sprite-apply_patch",
+			spriteClass: "gitCommandSprite",
+			callback: function(data) {
+				var item = forceSingleItem(data.items);
+				var dialog = new orion.git.widgets.ContentDialog({
+					title: "Content",
+					diffLocation: item.DiffLocation
+				});
+						dialog.startup();
+						dialog.show();
+	
+			},
+			//visibleWhen : function(item) {
+				//return item.Type === "Clone" ;
+			//}
+		});
+		commandService.addCommand(showContentCommand);
+		
 		var openCommitParameters = new mCommands.ParametersDescription([new mCommands.CommandParameter("commitName", "text", "Commit name:")], {hasOptionalParameters: true});
 		
 		var openCommitCommand = new mCommands.Command({
@@ -2260,7 +2282,7 @@ var exports = {};
 				var progressService = serviceRegistry.getService("orion.page.message");
 				
 				progressService.createProgressMonitor(
-					serviceRegistry.getService("orion.git.provider").stage(item.object.indexURI),
+					serviceRegistry.getService("orion.git.provider").stage(item.indexURI),
 					"Staging changes").deferred.then(
 					function(jsonData){
 						dojo.hitch(explorer, explorer.changedItem)(item);
@@ -2268,7 +2290,7 @@ var exports = {};
 				)
 			},
 			visibleWhen: function(item) {
-				return item.type === "fileItem" && !mGitUtil.isStaged(item.object);
+				return !mGitUtil.isStaged(item);
 			}
 		});	
 		
@@ -2286,7 +2308,7 @@ var exports = {};
 				var progressService = serviceRegistry.getService("orion.page.message");
 				
 				progressService.createProgressMonitor(
-					serviceRegistry.getService("orion.git.provider").unstage(item.object.indexURI, item.object.name),
+					serviceRegistry.getService("orion.git.provider").unstage(item.indexURI, item.name),
 					"Unstaging changes").deferred.then(
 					function(jsonData){
 						dojo.hitch(explorer, explorer.changedItem)(item);
@@ -2294,7 +2316,7 @@ var exports = {};
 				)
 			},
 			visibleWhen: function(item) {
-				return item.type === "fileItem" && mGitUtil.isStaged(item.object);
+				return mGitUtil.isStaged(item);
 			}
 		});	
 		
@@ -2383,12 +2405,12 @@ var exports = {};
 						}
 						var progressService = serviceRegistry.getService("orion.page.message");
 						progressService.createProgressMonitor(
-							serviceRegistry.getService("orion.git.provider").checkoutPath(item.object.CloneLocation, [item.object.path]),
+							serviceRegistry.getService("orion.git.provider").checkoutPath(item.CloneLocation, [item.path]),
 							"Resetting local changes").deferred.then(
 							function(jsonData){
 								dojo.hitch(explorer, explorer.changedItem)(item);
 							}, displayErrorOnStatus
-						)						
+						);				
 					}
 				);
 				
@@ -2398,7 +2420,7 @@ var exports = {};
 //				var return_value = (item.type === "unstagedItems" && self.hasUnstaged && self._unstagedContentRenderer.getSelected().length > 0);
 //				return return_value;
 				
-				return item.type === "fileItem" && !mGitUtil.isStaged(item.object);
+				return !mGitUtil.isStaged(item);
 			}
 		});
 

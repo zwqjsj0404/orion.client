@@ -22,18 +22,18 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 		createUndoStack: function(editor) {
 			var textView = editor.getTextView();
 			var undoStack =  new mUndoStack.UndoStack(textView, 200);
-			textView.setKeyBinding(new mKeyBinding.KeyBinding('z', true), "Undo");
-			textView.setAction("Undo", function() {
+			textView.setKeyBinding(new mKeyBinding.KeyBinding('z', true), "undo");
+			textView.setAction("undo", {name: messages.undo, handler: function() {
 				undoStack.undo();
 				return true;
-			});
+			}});
 			
 			var isMac = navigator.platform.indexOf("Mac") !== -1;
-			textView.setKeyBinding(isMac ? new mKeyBinding.KeyBinding('z', true, true) : new mKeyBinding.KeyBinding('y', true), "Redo");
-			textView.setAction("Redo", function() {
+			textView.setKeyBinding(isMac ? new mKeyBinding.KeyBinding('z', true, true) : new mKeyBinding.KeyBinding('y', true), "redo");
+			textView.setAction("redo", {name: messages.redo, handler: function() {
 				undoStack.redo();
 				return true;
-			});
+			}});
 			return undoStack;
 		}
 	};
@@ -145,8 +145,8 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 			
 			// Find actions
 			// These variables are used among the various find actions:
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding("f", true), messages.find);
-			this.textView.setAction(messages.find, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding("f", true), "find");
+			this.textView.setAction("find", {name: messages.find, handler: function() {
 				if (this._searcher) {
 					var editor = this.editor;
 					var selection = editor.getSelection();
@@ -159,10 +159,10 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 					return true;
 				}
 				return false;
-			}.bind(this));
+			}.bind(this)});
 			
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding("k", true), messages.findNext);
-			this.textView.setAction(messages.findNext, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding("k", true), "findNext");
+			this.textView.setAction("findNext", {name: messages.findNext, handler: function() {
 				if (this._searcher){
 					var selection = this.textView.getSelection();
 					if(selection.start < selection.end) {
@@ -173,10 +173,10 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 					return true;
 				}
 				return false;
-			}.bind(this));
+			}.bind(this)});
 			
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding("k", true, true), messages.findPrevious);
-			this.textView.setAction(messages.findPrevious, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding("k", true, true), "findPrevious");
+			this.textView.setAction("findPrevious", {name: messages.findPrevious, handler: function() {
 				if (this._searcher){
 					var selection = this.textView.getSelection();
 					if(selection.start < selection.end) {
@@ -187,10 +187,10 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 					return true;
 				}
 				return false;
-			}.bind(this));
+			}.bind(this)});
 	
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding("j", true), messages.incrementalFindKey);
-			this.textView.setAction(messages.incrementalFindKey, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding("j", true), "incrementalFind");
+			this.textView.setAction("incrementalFind", {name: messages.incrementalFindKey, handler: function() {
 				if (this._searcher && this._searcher.visible()) {
 					return true;
 				}
@@ -223,7 +223,7 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 					}
 				}
 				return true;
-			}.bind(this));
+			}.bind(this)});
 			this.textView.setAction("deletePrevious", function() {
 				if (this._incrementalFindActive) {
 					var editor = this.editor;
@@ -288,8 +288,7 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 				return false;
 			}.bind(this));
 	
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(9, false, true), messages.unindentLines);
-			this.textView.setAction(messages.unindentLines, function() {
+			this.textView.setAction("shiftTab", {name: messages.unindentLines, handler: function() {
 				if(!this.textView.getOptions("tabMode")) { return; }
 				var editor = this.editor;
 				var model = editor.getModel();
@@ -323,10 +322,10 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 				editor.setText(lines.join(""), lineStart, lineEnd);
 				editor.setSelection(lineStart === selection.start ? selection.start : selection.start - firstRemoveCount, selection.end - removeCount + (selection.end === lastLineStart+1 ? 1 : 0));
 				return true;
-			}.bind(this));
+			}.bind(this)});
 			
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(38, false, false, true), messages.moveLinesUp);
-			this.textView.setAction(messages.moveLinesUp, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(38, false, false, true), "moveLinesUp");
+			this.textView.setAction("moveLinesUp", {name: messages.moveLinesUp, handler: function() {
 				var editor = this.editor;
 				var model = editor.getModel();
 				var selection = editor.getSelection();
@@ -355,10 +354,10 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 				editor.setSelection(insertOffset, insertOffset + text.length - delimiterLength);
 				this.endUndo();
 				return true;
-			}.bind(this));
+			}.bind(this)});
 			
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(40, false, false, true), messages.moveLinesDown);
-			this.textView.setAction(messages.moveLinesDown, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(40, false, false, true), "moveLinesDown");
+			this.textView.setAction("moveLinesDown", {name: messages.moveLinesDown, handler: function() {
 				var editor = this.editor;
 				var model = editor.getModel();
 				var selection = editor.getSelection();
@@ -386,10 +385,10 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 				editor.setSelection(insertOffset + delimiterLength, insertOffset + delimiterLength + text.length);
 				this.endUndo();
 				return true;
-			}.bind(this));
+			}.bind(this)});
 			
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(38, true, false, true), messages.copyLinesUp);
-			this.textView.setAction(messages.copyLinesUp, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(38, true, false, true), "copyLinesUp");
+			this.textView.setAction("copyLinesUp", {name: messages.copyLinesUp, handler: function() {
 				var editor = this.editor;
 				var model = editor.getModel();
 				var selection = editor.getSelection();
@@ -407,10 +406,10 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 				editor.setText(text, insertOffset, insertOffset);
 				editor.setSelection(insertOffset, insertOffset + text.length - delimiter.length);
 				return true;
-			}.bind(this));
+			}.bind(this)});
 			
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(40, true, false, true), messages.copyLinesDown);
-			this.textView.setAction(messages.copyLinesDown, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(40, true, false, true), "copyLinesDown");
+			this.textView.setAction("copyLinesDown", {name: messages.copyLinesDown, handler: function() {
 				var editor = this.editor;
 				var model = editor.getModel();
 				var selection = editor.getSelection();
@@ -428,10 +427,10 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 				editor.setText(text, insertOffset, insertOffset);
 				editor.setSelection(insertOffset + delimiter.length, insertOffset + text.length);
 				return true;
-			}.bind(this));
+			}.bind(this)});
 			
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding('d', true, false, false), messages.deleteLines);
-			this.textView.setAction(messages.deleteLines, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding('d', true, false, false), "deleteLines");
+			this.textView.setAction("deleteLines", {name: messages.deleteLines, handler: function() {
 				var editor = this.editor;
 				var selection = editor.getSelection();
 				var model = editor.getModel();
@@ -441,11 +440,11 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 				var lineEnd = model.getLineEnd(lastLine, true);
 				editor.setText("", lineStart, lineEnd);
 				return true;
-			}.bind(this));
+			}.bind(this)});
 			
 			// Go To Line action
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding("l", true), messages.gotoLine);
-			this.textView.setAction(messages.gotoLine, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding("l", true), "gotoLine");
+			this.textView.setAction("gotoLine", {name: messages.gotoLine, handler: function() {
 				var editor = this.editor;
 				var model = editor.getModel();
 				var line = model.getLineAtOffset(editor.getCaretOffset());
@@ -455,10 +454,10 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 					editor.onGotoLine(line - 1, 0);
 				}
 				return true;
-			}.bind(this));
+			}.bind(this)});
 			
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(190, true), messages.nextAnnotation);
-			this.textView.setAction(messages.nextAnnotation, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(190, true), "nextAnnotation");
+			this.textView.setAction("nextAnnotation", {name: messages.nextAnnotation, handler: function() {
 				var editor = this.editor;
 				var annotationModel = editor.getAnnotationModel();
 				if(!annotationModel) { return true; }
@@ -497,10 +496,10 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 					break;
 				}
 				return true;
-			}.bind(this));
+			}.bind(this)});
 			
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(188, true), messages.prevAnnotation);
-			this.textView.setAction(messages.prevAnnotation, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(188, true), "previousAnnotation");
+			this.textView.setAction("previousAnnotation", {name: messages.prevAnnotation, handler: function() {
 				var editor = this.editor;
 				var annotationModel = editor.getAnnotationModel();
 				if(!annotationModel) { return true; }
@@ -542,16 +541,16 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 					editor.moveSelection(previousAnnotation.start, previousAnnotation.start, callback);
 				}
 				return true;
-			}.bind(this));
+			}.bind(this)});
 			
 			var isMac = navigator.platform.indexOf("Mac") !== -1;
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding("q", !isMac, false, false, isMac), messages.lastEdit);
-			this.textView.setAction(messages.lastEdit, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding("q", !isMac, false, false, isMac), "lastEdit");
+			this.textView.setAction("lastEdit", {name: messages.lastEdit, handler: function() {
 				if (typeof this._lastEditLocation === "number")  {
 					this.editor.showSelection(this._lastEditLocation);
 				}
 				return true;
-			}.bind(this));
+			}.bind(this)});
 		},
 			
 		toggleIncrementalFind: function() {
@@ -692,8 +691,8 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 		init: function() {
 		
 			// Block comment operations
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(191, true), messages.toggleLineComment);
-			this.textView.setAction(messages.toggleLineComment, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(191, true), "toggleLineComment");
+			this.textView.setAction("toggleLineComment", {name: messages.toggleLineComment, handler: function() {
 				var editor = this.editor;
 				var model = editor.getModel();
 				var selection = editor.getSelection();
@@ -740,7 +739,7 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 				editor.setText(text, lineStart, lineEnd);
 				editor.setSelection(selStart, selEnd);
 				return true;
-			}.bind(this));
+			}.bind(this)});
 			
 			function findEnclosingComment(model, start, end) {
 				var open = "/*", close = "*/";
@@ -776,8 +775,8 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 			}
 			
 			var isMac = navigator.platform.indexOf("Mac") !== -1;
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(191, true, !isMac, false, isMac), messages.addBlockComment);
-			this.textView.setAction(messages.addBlockComment, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(191, true, !isMac, false, isMac), "addBlockComment");
+			this.textView.setAction("addBlockComment", {name: messages.addBlockComment, handler: function() {
 				var editor = this.editor;
 				var model = editor.getModel();
 				var selection = editor.getSelection();
@@ -798,10 +797,10 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 				editor.setText(open + text + close, selection.start, selection.end);
 				editor.setSelection(selection.start + open.length, selection.end + open.length + (newLength-oldLength));
 				return true;
-			}.bind(this));
+			}.bind(this)});
 			
-			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(220, true, !isMac, false, isMac), messages.removeBlockComment);
-			this.textView.setAction(messages.removeBlockComment, function() {
+			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(220, true, !isMac, false, isMac), "removeBlockComment");
+			this.textView.setAction("removeBlockComment", {name: messages.removeBlockComment, handler: function() {
 				var editor = this.editor;
 				var model = editor.getModel();
 				var selection = editor.getSelection();
@@ -839,7 +838,7 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 					editor.setSelection(selection.start - open.length, selection.end - close.length);
 				}
 				return true;
-			}.bind(this));
+			}.bind(this)});
 		},
 		/**
 		 * Called when a content assist proposal has been applied. Inserts the proposal into the
@@ -1017,19 +1016,19 @@ function(messages, mUndoStack, mKeyBinding, mRulers, mAnnotations, mTooltip, mTe
 			this.textView.addEventListener("Verify", this.linkedModeListener.onVerify);
 
 			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(9), "nextLinkedModePosition");
-			this.textView.setAction("nextLinkedModePosition", function() {
+			this.textView.setAction("nextLinkedModePosition", {name: messages.nextLinkedModePosition, handler: function() {
 				// Switch to the next group on TAB key
 				this.linkedModeCurrentPositionIndex = ++this.linkedModeCurrentPositionIndex % this.linkedModePositions.length;
 				this.selectTextForLinkedModePosition(this.linkedModePositions[this.linkedModeCurrentPositionIndex]);
 				return true;
-			}.bind(this));
+			}.bind(this)});
 			
 			this.textView.setKeyBinding(new mKeyBinding.KeyBinding(9, false, true), "previousLinkedModePosition");
-			this.textView.setAction("previousLinkedModePosition", function() {
+			this.textView.setAction("previousLinkedModePosition", {name: messages.previousLinkedModePosition, handler: function() {
 				this.linkedModeCurrentPositionIndex = this.linkedModeCurrentPositionIndex > 0 ? this.linkedModeCurrentPositionIndex-1 : this.linkedModePositions.length-1;
 				this.selectTextForLinkedModePosition(this.linkedModePositions[this.linkedModeCurrentPositionIndex]);
 				return true;
-			}.bind(this));
+			}.bind(this)});
 
 			this.editor.reportStatus(messages.linkedModeEntered, null, true);
 		},

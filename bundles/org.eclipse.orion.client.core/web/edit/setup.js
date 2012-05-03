@@ -363,8 +363,8 @@ exports.setUpEditor = function(serviceRegistry, preferences, isReadOnly){
 		keyModeStack.push(escHandler);
 		
 		// global search
-		editor.getTextView().setKeyBinding(new mKeyBinding.KeyBinding("h", true), "Search Files");
-		editor.getTextView().setAction("Search Files", function() {
+		editor.getTextView().setKeyBinding(new mKeyBinding.KeyBinding("h", true), "searchFiles");
+		editor.getTextView().setAction("searchFiles", {name: "Search Files", handler: function() {
 			window.setTimeout(function() {
 				var e = editor.getTextView();
 				var selection = e.getSelection();
@@ -424,14 +424,14 @@ exports.setUpEditor = function(serviceRegistry, preferences, isReadOnly){
 				searcher.search(query, inputManager.getInput(), renderer);
 			}, 0);
 			return true;
-		});
+		}});
 		
 		// splitter binding
-		editor.getTextView().setKeyBinding(new mKeyBinding.KeyBinding("o", true), "Toggle Outliner");
-		editor.getTextView().setAction("Toggle Outliner", function(){
+		editor.getTextView().setKeyBinding(new mKeyBinding.KeyBinding("o", true), "toggleOutliner");
+		editor.getTextView().setAction("toggleOutliner", {name: "Toggle Outliner", handler: function(){
 				splitArea.toggle();
 				return true;
-		});
+		}});
 	};
 	
 	// Content Assist

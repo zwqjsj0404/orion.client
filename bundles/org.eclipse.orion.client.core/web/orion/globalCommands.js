@@ -604,11 +604,11 @@ define(['require', 'dojo', 'dijit', 'orion/commonHTMLFragments', 'orion/commands
 			
 		// set binding in editor and a general one for other pages
 		if (editor) {
-			editor.getTextView().setKeyBinding(new mKeyBinding.KeyBinding("f", true, true, false), "Find File Named...");
-			editor.getTextView().setAction("Find File Named...", function() {
+			editor.getTextView().setKeyBinding(new mKeyBinding.KeyBinding("f", true, true, false), openResourceCommand.id);
+			editor.getTextView().setAction(openResourceCommand.id, {name: openResourceCommand.name, handler: function() {
 					openResourceDialog(searcher, serviceRegistry, editor);
 					return true;
-				});
+				}});
 		}
 		
 		commandService.addCommand(openResourceCommand);
@@ -639,8 +639,8 @@ define(['require', 'dojo', 'dijit', 'orion/commonHTMLFragments', 'orion/commands
 		commandService.registerCommandContribution("globalActions", "orion.toggleTrim", 100, null, true, new mCommands.CommandKeyBinding("m", true, true));
 		
 		if (editor) {
-			editor.getTextView().setKeyBinding(new mCommands.CommandKeyBinding('m', true, true), "Toggle Trim");
-			editor.getTextView().setAction("Toggle Trim", toggleBanner.callback);
+			editor.getTextView().setKeyBinding(new mCommands.CommandKeyBinding('m', true, true), toggleBanner.id);
+			editor.getTextView().setAction(toggleBanner.id, {name: toggleBanner.name, handler: toggleBanner.callback});
 		}
 				
 		var keyAssistNode = dojo.byId("keyAssist");
@@ -687,12 +687,13 @@ define(['require', 'dojo', 'dijit', 'orion/commonHTMLFragments', 'orion/commands
 					dojo.empty(keyAssistNode);
 					if (editor) {
 						dojo.place("<h2>Editor</h2>", keyAssistNode, "last");
-						var editorActions = editor.getTextView().getActions(false);
+						var textView = editor.getTextView();
+						var editorActions = textView.getActions(false);
 						for(var i=0; i<editorActions.length; i++) {
-							var actionName = editorActions[i];
-							var bindings = editor.getTextView().getKeyBindings(actionName);
+							var actionID = editorActions[i];
+							var bindings = textView.getKeyBindings(actionID);
 							for (var j=0; j<bindings.length; j++) {
-								dojo.place("<span role=\"listitem\">"+mUtil.getUserKeyString(bindings[j])+" = " + actionName + "<br></span>", keyAssistNode, "last");
+								dojo.place("<span role=\"listitem\">"+mUtil.getUserKeyString(bindings[j])+" = " + textView.getAction(actionID).name + "<br></span>", keyAssistNode, "last");
 							}
 						}
 					}
@@ -708,8 +709,8 @@ define(['require', 'dojo', 'dijit', 'orion/commonHTMLFragments', 'orion/commands
 		commandService.registerCommandContribution("globalActions", "eclipse.keyAssist", 100, null, true, new mCommands.CommandKeyBinding(191, false, true));
 		if (editor) {
 			var isMac = window.navigator.platform.indexOf("Mac") !== -1;
-			editor.getTextView().setKeyBinding(new mCommands.CommandKeyBinding(191, false, true, !isMac, isMac), "Show Keys");
-			editor.getTextView().setAction("Show Keys", keyAssistCommand.callback);
+			editor.getTextView().setKeyBinding(new mCommands.CommandKeyBinding(191, false, true, !isMac, isMac), keyAssistCommand.id);
+			editor.getTextView().setAction(keyAssistCommand.id, {name: keyAssistCommand.name, handler: keyAssistCommand.callback});
 		}
 		
 		userMenu.setKeyAssist(keyAssistCommand.callback);

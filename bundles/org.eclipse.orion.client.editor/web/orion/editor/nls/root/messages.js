@@ -13,6 +13,8 @@
 
 //NLS_CHARSET=UTF-8
 
+/*global define */
+
 define({
 	"incrementalFind": "Incremental find: ${0}",
 	"incrementalFindNotFound": "Incremental find: ${0} (not found)",
@@ -38,6 +40,9 @@ define({
 	"linkedModeEntered": "Linked Mode entered",
 	"linkedModeExited": "Linked Mode exited",
 	"syntaxError": "Syntax Error",
+	"cancelMode": "Cancel Current Mode",
+	"undo": "Undo",
+	"redo": "Redo",
 	"contentAssist": "Content Assist",
 	"lineColumn": "Line ${0} : Col ${1}"
 });

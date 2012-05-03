@@ -137,7 +137,7 @@ define("orion/textview/textView", ['orion/textview/textModel', 'orion/textview/k
 	 * @property {orion.textview.TextModel} [model] the text model for the view. If it is not set the view creates an empty {@link orion.textview.TextModel}.
 	 * @property {Boolean} [readonly=false] whether or not the view is read-only.
 	 * @property {Boolean} [fullSelection=true] whether or not the view is in full selection mode.
-	 * @property {Boolean} [tabMode=true] whether or not the tab keypress is consumed by the view.
+	 * @property {Boolean} [tabMode=true] whether or not the tab keypress is consumed by the view or is used for focus traversal.
 	 * @property {Boolean} [expandTab=false] whether or not the tab key inserts white spaces.
 	 * @property {String} [themeClass] the CSS class for the view theming.
 	 * @property {Number} [tabSize] The number of spaces in a tab.
@@ -326,6 +326,14 @@ define("orion/textview/textView", ['orion/textview/textModel', 'orion/textview/k
 			return this._hasFocus;
 		},
 		/**
+		 * Returns the action for a given action ID.
+		 *
+		 * @returns {orion.textview.Action} the action
+		 */
+		getAction: function(actionID) {
+			return this._actions[actionID];
+		},
+		/**
 		 * Returns all action IDs defined in the text view.
 		 * <p>
 		 * There are two types of actions, the predefined actions of the view 
@@ -372,7 +380,9 @@ define("orion/textview/textView", ['orion/textview/textModel', 'orion/textview/k
 		 *       <li>"deleteWordPrevious" - deletes the word preceding the caret</li>
 		 *       <li>"deleteWordNext" - deletes the word following the caret</li>
 		 *       <li>"tab" - inserts a tab character at the caret</li>
+		 *       <li>"shiftTab" - noop</li>
 		 *       <li>"enter" - inserts a line delimiter at the caret</li>
+		 *       <li>"toggleTabMode" - toggles tab mode.</li>
 		 *     </ul>
 		 *   <li>Clipboard actions.</li>
 		 *     <ul>
@@ -730,8 +740,8 @@ define("orion/textview/textView", ['orion/textview/textModel', 'orion/textview/k
 			if (!this._clientDiv) { return; }
 			var action = this._actions[actionID];
 			if (action) {
-				if (!defaultAction && action.userHandler) {
-					if (action.userHandler()) { return; }
+				if (!defaultAction && action.handler) {
+					if (action.handler()) { return; }
 				}
 				if (action.defaultHandler) { return action.defaultHandler(); }
 			}
@@ -1170,6 +1180,18 @@ define("orion/textview/textView", ['orion/textview/textModel', 'orion/textview/k
 			this._handleResize(null);
 		},
 		/**
+		 * @class This object describes an action for the text view.
+		 * <p>
+		 * <b>See:</b><br/>
+		 * {@link orion.textview.TextView}<br/>
+		 * {@link orion.textview.TextView#setAction}
+		 * </p>		 
+		 * @name orion.textview.Action
+		 *
+		 * @property {String} [name] the name to be used when showing the action as text.
+		 * @property {Function} handler the action handler function.
+		 */
+		/**
 		 * Associates an application defined handler to an action ID.
 		 * <p>
 		 * If the action ID is a predefined action, the given handler executes before
@@ -1178,7 +1200,7 @@ define("orion/textview/textView", ['orion/textview/textModel', 'orion/textview/k
 		 * </p>
 		 *
 		 * @param {String} actionID the action ID.
-		 * @param {Function} handler the action handler.
+		 * @param {Function|orion.textview.Action} handler the action handler.
 		 *
 		 * @see #getActions
 		 * @see #invokeAction
@@ -1190,7 +1212,15 @@ define("orion/textview/textView", ['orion/textview/textModel', 'orion/textview/k
 			if (!action) { 
 				action = actions[actionID] = {};
 			}
-			action.userHandler = handler;
+			if (typeof handler === "function" || !handler) {
+				action.handler = handler;
+			} else {
+				for (var prop in handler) {
+					if (handler.hasOwnProperty(prop)) {
+						action[prop] = handler[prop];
+					}
+				}
+			}
 		},
 		/**
 		 * Associates a key binding with the given action ID. Any previous
@@ -2422,8 +2452,8 @@ define("orion/textview/textView", ['orion/textview/textModel', 'orion/textview/k
 						var actions = this._actions;
 						var action = actions[kb.actionID];
 						if (action) {
-							if (action.userHandler) {
-								if (!action.userHandler()) {
+							if (action.handler) {
+								if (!action.handler()) {
 									if (action.defaultHandler) {
 										return typeof(action.defaultHandler()) === "boolean";
 									} else {

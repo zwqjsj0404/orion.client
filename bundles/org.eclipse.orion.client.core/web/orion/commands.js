@@ -233,6 +233,7 @@ define(['i18n!orion/nls/messages', 'require', 'dojo', 'dijit', 'orion/util', 'or
 		this._urlBindings = {};
 		this._init(options);
 		this._parameterCollector = null;
+		this.showMenuIcons = false;
 	}
 	CommandService.prototype = /** @lends orion.commands.CommandService.prototype */ {
 		_init: function(options) {
@@ -1234,11 +1235,12 @@ define(['i18n!orion/nls/messages', 'require', 'dojo', 'dijit', 'orion/util', 'or
 			mNavUtils.generateNavGrid(domNodeWrapperList, context.domNode);
 		},
 		_addMenuItem: function(parent, context, domNodeWrapperList) {
+			var showIcon = context.commandService.showMenuIcons;
 			context.domParent = parent.domNode;
 			var menuitem = new CommandMenuItem({
 				labelType: this.hrefCallback ? "html" : "text", //$NON-NLS-1$ //$NON-NLS-0$
 				label: this.name,
-				iconClass: this.imageClass,
+				iconClass: showIcon ? this.imageClass : null,
 				hasLink: !!this.hrefCallback
 			});
 			if (this.tooltip) {
@@ -1271,12 +1273,14 @@ define(['i18n!orion/nls/messages', 'require', 'dojo', 'dijit', 'orion/util', 'or
 			// we may need to refer back to the command.  
 			menuitem.eclipseCommand = this;
 			parent.addChild(menuitem);
-			if (this.imageClass) {
-				dojo.addClass(menuitem.iconNode, this.spriteClass);
-			} else if (this.image) {
-				dojo.addClass(menuitem.iconNode, "commandMenuItem"); //$NON-NLS-0$
-				// reaching...
-				menuitem.iconNode.src = this.image;
+			if (showIcon) {
+				if (this.imageClass) {
+					dojo.addClass(menuitem.iconNode, this.spriteClass);
+				} else if (this.image) {
+					dojo.addClass(menuitem.iconNode, "commandMenuItem"); //$NON-NLS-0$
+					// reaching...
+					menuitem.iconNode.src = this.image;
+				}
 			}
 			context.domNode = menuitem.domNode;
 			mNavUtils.generateNavGrid(domNodeWrapperList, context.domNode);

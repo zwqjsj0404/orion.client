@@ -87,6 +87,11 @@ define(function() {
 							onLoad(master);
 						}
 					} else {
+						userLocale = config.locale || (navigator ? (navigator.language || navigator.userLanguage) : null);
+						if(!userLocale || !(userLocale.indexOf(locale)===0)){
+							onLoad({});
+							return;
+						}
 						var found = nlsReferences.some(function(reference) {
 							if (name === reference.getProperty("name")) { //$NON-NLS-0$
 								serviceRegistry.getService(reference).getMessageBundle().then(function(bundle) {

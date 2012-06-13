@@ -14,10 +14,10 @@
 
 define(['i18n!orion/navigate/nls/messages', 'dojo', 'dijit', 'orion/bootstrap', 'orion/selection', 'orion/status', 'orion/progress', 'orion/dialogs',
         'orion/ssh/sshTools', 'orion/commands', 'orion/favorites', 'orion/tasks', 'orion/navoutliner', 'orion/searchClient', 'orion/fileClient', 'orion/operationsClient', 'orion/globalCommands',
-        'orion/fileCommands', 'orion/explorer-table', 'orion/util', 'orion/PageUtil','orion/contentTypes',
+        'orion/fileCommands', 'orion/git/cloneCommand', 'orion/explorer-table', 'orion/util', 'orion/PageUtil','orion/contentTypes',
         'dojo/parser', 'dijit/layout/BorderContainer', 'dijit/layout/ContentPane', 'orion/widgets/eWebBorderContainer'], 
 		function(messages, dojo, dijit, mBootstrap, mSelection, mStatus, mProgress, mDialogs, mSsh, mCommands, mFavorites, mTasks, mNavOutliner,
-				mSearchClient, mFileClient, mOperationsClient, mGlobalCommands, mFileCommands, mExplorerTable, mUtil, PageUtil, mContentTypes) {
+				mSearchClient, mFileClient, mOperationsClient, mGlobalCommands, mFileCommands, mGitCloneCommand, mExplorerTable, mUtil, PageUtil, mContentTypes) {
 
 dojo.addOnLoad(function(){
 	dojo.parser.parse();
@@ -61,7 +61,7 @@ dojo.addOnLoad(function(){
 						{commandId: "orion.new.template"}, //$NON-NLS-0$
 						{commandId: "orion.new.sftp"}, //$NON-NLS-0$
 						{commandId: "orion.new.zip"}, //$NON-NLS-0$
-						{commandId: "orion.new.gitclone"}, //$NON-NLS-0$
+						{commandId: "orion.git.clone"}, //$NON-NLS-0$
 						{commandId: "orion.new.project"} //$NON-NLS-0$
 					];
 					// Add the getting started task list.  Keep it collapsed unless there is no workspace content.
@@ -80,6 +80,7 @@ dojo.addOnLoad(function(){
 							
 		// commands shared by navigators
 		mFileCommands.createFileCommands(serviceRegistry, commandService, explorer, fileClient, "pageActions", "selectionTools"); //$NON-NLS-1$ //$NON-NLS-0$
+		mGitCloneCommand.createCommand(serviceRegistry, commandService, explorer, fileClient, "pageActions", "selectionTools"); //$NON-NLS-1$ //$NON-NLS-0$
 		
 		// navigator-specific commands
 		var toggleOutlineCommand = new mCommands.Command({

@@ -626,18 +626,6 @@ define(['i18n!orion/navigate/nls/messages', "require", "dojo", "orion/util", "or
 			visibleWhen: canCreateProject
 		});
 		commandService.addCommand(newZipProjectCommand);
-		
-		var newGitClone = new mCommands.Command({
-			name: messages["Clone Git Repository"],
-			tooltip: messages["Clone a git repository"],
-			description: messages["Go to the Orion repositories page to provide a git repository URL.  Once the repository is created, it will appear in the Navigator."],
-			id: "orion.new.gitclone", //$NON-NLS-0$
-			hrefCallback: function(data) {
-				return window.location.protocol + "//" + window.location.host + "/git/git-repository.html#,cloneGitRepository=URL"; //$NON-NLS-0$
-			},
-			visibleWhen: canCreateProject
-		});
-		commandService.addCommand(newGitClone);
 
 		var linkProjectCommand = new mCommands.Command({
 			name: messages["Link to Server"],

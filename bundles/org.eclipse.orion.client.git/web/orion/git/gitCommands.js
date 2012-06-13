@@ -1926,7 +1926,7 @@ var exports = {};
 
 		var cloneGitRepositoryCommand = new mCommands.Command({
 			name : messages["Clone Repository"],
-			tooltip : messages["Clone an existing Git repository to a folder"],
+			tooltip : messages["Clone Repository Tooltip"],
 			id : "eclipse.cloneGitRepository", //$NON-NLS-0$
 			parameters: cloneParameters,
 			callback : function(data) {

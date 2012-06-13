@@ -205,12 +205,13 @@ define(['i18n!git/nls/gitmessages', 'require', 'dojo', 'orion/auth', 'orion/comm
 				var cloneFunction = function(gitUrl, path, name) {
 					internal.getDefaultSshOptions(serviceRegistry).then(function(options) {
 						var func = arguments.callee;
-						serviceRegistry.getService("orion.page.message").createProgressMonitor(cloneGitRepository(name, gitUrl, path, explorer.treeRoot.Location, options.gitSshUsername, options.gitSshPassword, options.knownHosts, //$NON-NLS-0$
+						serviceRegistry.getService("orion.page.message").createProgressMonitor(
+							cloneGitRepository(name, gitUrl, path, explorer.treeRoot.Location, options.gitSshUsername, options.gitSshPassword, options.knownHosts, //$NON-NLS-0$
 								options.gitPrivateKey, options.gitPassphrase),
 								messages["Cloning repository: "] + gitUrl).deferred.then(function(jsonData, secondArg) {
 									internal.handleProgressServiceResponse(jsonData, options, serviceRegistry, function(jsonData) {
 								if (explorer.changedItem) {
-									dojo.hitch(explorer, function() {this.changedItem(this.treeRoot, true);});
+									dojo.hitch(explorer, explorer.changedItem)(explorer.treeRoot, true);
 								}
 							}, func, messages['Clone Git Repository']);
 						}, function(jsonData, secondArg) {

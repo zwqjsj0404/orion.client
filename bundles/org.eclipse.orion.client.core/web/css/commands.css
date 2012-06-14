@@ -146,18 +146,18 @@ should be added here.  Use additional classes where more treatment is needed. */
 .core-sprite-check{ background-position: 0 -66px; width: 16px; height: 16px; } 
 .core-sprite-check_on{ background-position: 0 -132px; width: 16px; height: 16px; } 
 .core-sprite-close{ background-position: 0 -198px; width: 16px; height: 16px; cursor: pointer;} 
-.core-sprite-collapseAll{ background-position: 0 -264px; width: 16px; height: 16px; } 
-.core-sprite-delete{ background-position: 0 -330px; width: 14px; height: 13px; } 
+.core-sprite-collapseAll{ background:url(../images/collapseAll.gif) no-repeat center; width: 16px; height: 16px; } 
+.core-sprite-delete{ background:url(../images/delete.gif) no-repeat center; width: 16px; height: 16px; } 
 .core-sprite-diff-border-sel{ background-position: 0 -393px; width: 46px; height: 1px; } 
 .core-sprite-diff-border{ background-position: 0 -444px; width: 46px; height: 1px; } 
 .core-sprite-edit{ background-position: 0 -495px; width: 16px; height: 16px; } 
 .core-sprite-error{ background-position: 0 -561px; width: 16px; height: 16px; } 
-.core-sprite-expandAll{ background-position: 0 -627px; width: 16px; height: 16px; } 
+.core-sprite-expandAll{ background:url(../images/expandAll.gif) no-repeat center; width: 16px; height: 16px; } 
 .core-sprite-exportzip{ background-position: 0 -693px; width: 16px; height: 16px; } 
 .core-sprite-favorite_sml{ background-position: 0 -759px; width: 16px; height: 10px; margin:0; } 
-.core-sprite-file{ background-position: 0 -825px; width: 16px; height: 16px; } 
+.core-sprite-file{ background:url(../images/file.gif) no-repeat center; width: 16px; height: 16px; } 
 .core-sprite-file_model{ background-position: 0 -891px; width: 16px; height: 16px; } 
-.core-sprite-folder{ background-position: 0 -957px; width: 16px; height: 16px; } 
+.core-sprite-folder{ background:url(../images/folder.gif) no-repeat center; width: 16px; height: 16px; } 
 .core-sprite-gear{ background-position: 0 -1023px; width: 16px; height: 16px; } 
 .core-sprite-help{ background-position: 0 -1089px; width: 16px; height: 16px; } 
 .core-sprite-help_banner{ background-position: 0 -1155px; width: 16px; height: 16px; } 
@@ -165,12 +165,12 @@ should be added here.  Use additional classes where more treatment is needed. */
 .core-sprite-info{ background-position: 0 -1287px; width: 16px; height: 16px; } 
 .core-sprite-leftarrow{ background-position: 0 -1353px; width: 16px; height: 16px; } 
 .core-sprite-link{ background-position: 0 -1419px; width: 16px; height: 16px; } 
-.core-sprite-makeFavorite{ background-position: 0 -1485px; width: 16px; height: 16px; } 
+.core-sprite-makeFavorite{ background:url(../images/makeFavorite.gif) no-repeat center; width: 16px; height: 16px; } 
 .core-sprite-menu{ background-position: 0 -1551px; width: 16px; height: 16px; } 
 .core-sprite-menu_twistie{ background-position: 0 -1617px; width: 5px; height: 3px; } 
 .core-sprite-more{ background-position: 0 -1670px; width: 16px; height: 16px; } 
-.core-sprite-move_down{ background-position: 0 -1736px; width: 16px; height: 16px; } 
-.core-sprite-move_up{ background-position: 0 -1802px; width: 16px; height: 16px; } 
+.core-sprite-move_down{ background:url(../images/move_down.gif) no-repeat center; width: 16px; height: 16px; } 
+.core-sprite-move_up{ background:url(../images/move_up.gif) no-repeat center; width: 16px; height: 16px; } 
 .core-sprite-new_file{ background-position: 0 -1868px; width: 16px; height: 16px; } 
 .core-sprite-new_folder{ background-position: 0 -1934px; width: 16px; height: 16px; } 
 .core-sprite-none{ background-position: -96px 0; width: 16px; height: 16px; } 
@@ -180,7 +180,7 @@ should be added here.  Use additional classes where more treatment is needed. */
 .core-sprite-progress{ background-position: -96px -262px; width: 16px; height: 16px; } 
 .core-sprite-progress_none{ background-position: -96px -328px; width: 16px; height: 16px; } 
 .core-sprite-progress_running{ background-position: -96px -394px; width: 16px; height: 16px; } 
-.core-sprite-refresh{ background-position: -96px -460px; width: 16px; height: 16px; } 
+.core-sprite-refresh{ background:url(../images/refresh.gif) no-repeat center; width: 16px; height: 16px; } 
 .core-sprite-rename{ background-position: -96px -526px; width: 16px; height: 16px; } 
 .core-sprite-replace{ background-position: -96px -592px; width: 16px; height: 16px; } 
 .core-sprite-replaceAll{ background-position: -96px -658px; width: 16px; height: 16px; } 
@@ -188,8 +188,8 @@ should be added here.  Use additional classes where more treatment is needed. */
 .core-sprite-sep{ background-position: -96px -790px; width: 1px; height: 16px; } 
 .core-sprite-splitterleft{ background-position: -96px -856px; width: 6px; height: 11px; } 
 .core-sprite-splitterright{ background-position: -96px -917px; width: 6px; height: 11px; } 
-.core-sprite-start{ background-position: -96px -978px; width: 16px; height: 16px; } 
-.core-sprite-stop{ background-position: -96px -1044px; width: 16px; height: 16px; } 
+.core-sprite-start{ background:url(../images/start.gif) no-repeat center; width: 16px; height: 16px; } 
+.core-sprite-stop{ background:url(../images/stop.gif) no-repeat center; width: 16px; height: 16px; } 
 .core-sprite-transferin{ background-position: -96px -1110px; width: 16px; height: 16px; } 
 .core-sprite-transferout{ background-position: -96px -1176px; width: 16px; height: 16px; } 
 .core-sprite-twistie_closed{ background:url(../images/closedarrow.png) no-repeat top left;width: 16px; height: 16px; } 

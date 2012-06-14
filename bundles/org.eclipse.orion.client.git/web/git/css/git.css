@@ -105,7 +105,7 @@
 .git-sprite-rebase{ background:url(../images/rebase.gif) no-repeat center; width: 16px; height: 16px; } 
 .git-sprite-remote{ background:url(../images/remote.gif) no-repeat center; width: 16px; height: 16px; } 
 .git-sprite-remotes{ background-position: 0 -1518px; width: 16px; height: 16px; } 
-.git-sprite-removal{ background-position: 0 -1584px; width: 16px; height: 16px; } 
+.git-sprite-removal{ background:url(../images/removal.gif) no-repeat center; width: 16px; height: 16px; } 
 .git-sprite-repository{ background-position: 0 -1650px; width: 16px; height: 16px; } 
 .git-sprite-reset{ background:url(../images/reset.gif) no-repeat center; width: 16px; height: 16px; } 
 .git-sprite-stage{ background:url(../images/stage.gif) no-repeat center; width: 16px; height: 16px; } 
@@ -113,5 +113,5 @@
 .git-sprite-status{ background-position: 0 -1914px; width: 16px; height: 16px; } 
 .git-sprite-tag{ background:url(../images/tag.gif) no-repeat center; width: 16px; height: 16px; } 
 .git-sprite-tags{ background-position: -66px -66px; width: 16px; height: 16px; } 
-.git-sprite-unstage{ background-position: -66px -132px; width: 16px; height: 16px; } 
+.git-sprite-unstage{ background:url(../images/unstage.gif) no-repeat center; width: 16px; height: 16px; } 
 .git-sprite-unstage_all{ background-position: -66px -198px; width: 16px; height: 16px; } 

@@ -1345,21 +1345,25 @@ define(['i18n!orion/nls/messages', 'require', 'dojo', 'dijit', 'orion/util', 'or
 			});
 
 			var choices = this.getChoices(items, handler, userData);
+			var showIcon = this.showMenuIcons;
+
 			for (var j=0; j<choices.length; j++) {
 				var choice = choices[j];
 				var menuitem;
 				if (choice.name) {
 					menuitem = new dijit.MenuItem({
 						label: choice.name,
-						iconClass: choice.imageClass,
+						iconClass: showIcon ? choice.imageClass : null,
 						onClick: this.makeChoiceCallback(choice, items)
 					});
-					if (choice.imageClass) {
-						dojo.addClass(menuitem.iconNode, choice.spriteClass || "commandSprite"); //$NON-NLS-0$
-					} else if (choice.image) {
-						dojo.addClass(menuitem.iconNode, "commandImage"); //$NON-NLS-0$
-						menuitem.iconNode.src = choice.image;
-					}			
+					if (showIcon) {
+						if (choice.imageClass) {
+							dojo.addClass(menuitem.iconNode, choice.spriteClass || "commandSprite"); //$NON-NLS-0$
+						} else if (choice.image) {
+							dojo.addClass(menuitem.iconNode, "commandImage"); //$NON-NLS-0$
+							menuitem.iconNode.src = choice.image;
+						}
+					}
 				} else {  // anything not named is a separator
 					menuitem = new dijit.MenuSeparator();
 				}

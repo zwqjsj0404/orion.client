@@ -183,7 +183,7 @@ should be added here.  Use additional classes where more treatment is needed. */
 .core-sprite-refresh{ background:url(../images/refresh.gif) no-repeat center; width: 16px; height: 16px; } 
 .core-sprite-rename{ background-position: -96px -526px; width: 16px; height: 16px; } 
 .core-sprite-replace{ background-position: -96px -592px; width: 16px; height: 16px; } 
-.core-sprite-replaceAll{ background-position: -96px -658px; width: 16px; height: 16px; } 
+.core-sprite-replaceAll{ background:url(../images/replaceAll.gif) no-repeat top left;width: 16px; height: 16px; }  
 .core-sprite-rightarrow{ background-position: -96px -724px; width: 16px; height: 16px; } 
 .core-sprite-sep{ background-position: -96px -790px; width: 1px; height: 16px; } 
 .core-sprite-splitterleft{ background-position: -96px -856px; width: 6px; height: 11px; } 

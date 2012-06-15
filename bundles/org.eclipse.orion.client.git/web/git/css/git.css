@@ -92,14 +92,14 @@
 .git-sprite-commit{ background-position: 0 -462px; width: 16px; height: 16px; } 
 .git-sprite-conflict-file{ background-position: 0 -528px; width: 16px; height: 16px; } 
 .git-sprite-diff{ background-position: 0 -594px; width: 16px; height: 16px; } 
-.git-sprite-fetch{ background-position: 0 -660px; width: 16px; height: 16px; } 
+.git-sprite-fetch{ background:url(../images/fetch.png) no-repeat center; width: 16px; height: 16px; } 
 .git-sprite-file{ background:url(../../images/file.gif) no-repeat center; width: 16px; height: 16px; }  
-.git-sprite-incoming_commit{ background-position: 0 -726px; width: 16px; height: 16px; } 
+.git-sprite-incoming_commit{ background:url(../images/incoming_commit.png) no-repeat center; width: 16px; height: 16px; } 
 .git-sprite-log{ background-position: 0 -792px; width: 16px; height: 16px; } 
 .git-sprite-menu{ background-position: 0 -858px; width: 16px; height: 16px; } 
 .git-sprite-merge{ background:url(../images/merge.gif) no-repeat center; width: 16px; height: 16px; } 
 .git-sprite-open_compare{ background-position: 0 -1056px; width: 16px; height: 16px; } 
-.git-sprite-outgoing_commit{ background-position: 0 -1122px; width: 16px; height: 16px; } 
+.git-sprite-outgoing_commit{ background:url(../images/outgoing_commit.png) no-repeat center; width: 16px; height: 16px; } 
 .git-sprite-pull{ background:url(../images/pull.gif) no-repeat center; width: 16px; height: 16px; } 
 .git-sprite-push{ background-position: 0 -1254px; width: 16px; height: 16px; } 
 .git-sprite-rebase{ background:url(../images/rebase.gif) no-repeat center; width: 16px; height: 16px; } 

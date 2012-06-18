@@ -163,7 +163,7 @@ should be added here.  Use additional classes where more treatment is needed. */
 .core-sprite-help_banner{ background-position: 0 -1155px; width: 16px; height: 16px; } 
 .core-sprite-importzip{ background-position: 0 -1221px; width: 16px; height: 16px; } 
 .core-sprite-info{ background-position: 0 -1287px; width: 16px; height: 16px; } 
-.core-sprite-leftarrow{ background-position: 0 -1353px; width: 16px; height: 16px; } 
+.core-sprite-leftarrow{ background:url(../images/leftarrow.png) no-repeat top left;width: 16px; height: 16px; }  
 .core-sprite-link{ background-position: 0 -1419px; width: 16px; height: 16px; } 
 .core-sprite-makeFavorite{ background:url(../images/makeFavorite.gif) no-repeat center; width: 16px; height: 16px; } 
 .core-sprite-menu{ background-position: 0 -1551px; width: 16px; height: 16px; } 
@@ -184,7 +184,7 @@ should be added here.  Use additional classes where more treatment is needed. */
 .core-sprite-rename{ background-position: -96px -526px; width: 16px; height: 16px; } 
 .core-sprite-replace{ background-position: -96px -592px; width: 16px; height: 16px; } 
 .core-sprite-replaceAll{ background:url(../images/replaceAll.gif) no-repeat top left;width: 16px; height: 16px; }  
-.core-sprite-rightarrow{ background-position: -96px -724px; width: 16px; height: 16px; } 
+.core-sprite-rightarrow{ background:url(../images/rightarrow.png) no-repeat top left;width: 16px; height: 16px; }  
 .core-sprite-sep{ background-position: -96px -790px; width: 1px; height: 16px; } 
 .core-sprite-splitterleft{ background-position: -96px -856px; width: 6px; height: 11px; } 
 .core-sprite-splitterright{ background-position: -96px -917px; width: 6px; height: 11px; } 

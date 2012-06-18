@@ -154,7 +154,7 @@ should be added here.  Use additional classes where more treatment is needed. */
 .core-sprite-error{ background-position: 0 -561px; width: 16px; height: 16px; } 
 .core-sprite-expandAll{ background:url(../images/expandAll.gif) no-repeat center; width: 16px; height: 16px; } 
 .core-sprite-exportzip{ background-position: 0 -693px; width: 16px; height: 16px; } 
-.core-sprite-favorite_sml{ background-position: 0 -759px; width: 16px; height: 10px; margin:0; } 
+.core-sprite-favorite_sml{  background:url(../images/favorite_sml.gif) no-repeat center; width: 16px; height: 10px; margin:0; } 
 .core-sprite-file{ background:url(../images/file.gif) no-repeat center; width: 16px; height: 16px; } 
 .core-sprite-file_model{ background:url(../images/file_model.gif) no-repeat center; width: 16px; height: 16px; } 
 .core-sprite-folder{ background:url(../images/folder.gif) no-repeat center; width: 16px; height: 16px; } 
@@ -180,7 +180,7 @@ should be added here.  Use additional classes where more treatment is needed. */
 .core-sprite-progress{ background-position: -96px -262px; width: 16px; height: 16px; } 
 .core-sprite-progress_none{ background-position: -96px -328px; width: 16px; height: 16px; } 
 .core-sprite-progress_running{ background-position: -96px -394px; width: 16px; height: 16px; } 
-.core-sprite-refresh{ background:url(../images/refresh.gif) no-repeat center; width: 16px; height: 16px; } 
+.core-sprite-refresh{ background:url(../images/refresh.png) no-repeat center; width: 16px; height: 16px; } 
 .core-sprite-rename{ background-position: -96px -526px; width: 16px; height: 16px; } 
 .core-sprite-replace{ background-position: -96px -592px; width: 16px; height: 16px; } 
 .core-sprite-replaceAll{ background:url(../images/replaceAll.gif) no-repeat top left;width: 16px; height: 16px; }  

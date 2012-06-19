@@ -120,8 +120,12 @@ a:hover {
 }
 
 .logo {
-	padding-top: 6px;
-	padding-right:5px;
+	background-image: url(../images/core_sprites.png);
+	background-repeat: no-repeat;
+	background-position: 0 -517px; 
+	width: 37px; height: 14px; 
+	margin-top: 6px;
+	margin-right:5px;
 }
 
 .primaryNav {

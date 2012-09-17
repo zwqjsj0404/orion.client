@@ -43,12 +43,18 @@ define(['i18n!orion/navigate/nls/messages', 'require', 'dojo', 'orion/util', 'or
 				if (!exclude) {
 					filtered.push(children[i]);
 					children[i].parent = parent;
+					if (typeof(this.adornHook) === "function") {
+						this.adornHook(children[i]);
+					}
 				}
 			}
 			children = filtered;
 		} else {
 			for (var j in children) {
 				children[j].parent = parent;
+				if (typeof(this.adornHook) === "function") {
+					this.adornHook(children[j]);
+				}
 			}
 		}
 	
@@ -264,6 +270,7 @@ define(['i18n!orion/navigate/nls/messages', 'require', 'dojo', 'orion/util', 'or
 
 	//return module exports
 	return {
-		FileExplorer: FileExplorer
+		FileExplorer: FileExplorer,
+		FileExplorerModel: Model
 	};
 });

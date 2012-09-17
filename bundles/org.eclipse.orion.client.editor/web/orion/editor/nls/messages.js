@@ -18,6 +18,7 @@ define(['orion/textview/i18n!orion/editor/nls/messages'], function(bundle) {
 		root: {
 			"Comment": "Comment",
 			"Flat outline": "Flat outline",
+			"Navigator": "Navigator",
 			"incrementalFind": "Incremental find: ${0}",
 			"incrementalFindNotFound": "Incremental find: ${0} (not found)",
 			"find": "Find...",

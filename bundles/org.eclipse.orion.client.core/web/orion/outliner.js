@@ -12,11 +12,12 @@
 
 define(['i18n!orion/nls/messages', 'dojo', 'orion/util', 'orion/section', 'orion/explorers/explorer', 'orion/commands', 'orion/URITemplate', 'orion/EventTarget'], function(messages, dojo, mUtil, mSection, mExplorer, mCommands, URITemplate, EventTarget) {
 
-	function OutlineRenderer (options, explorer, title, selectionService) {
+	function OutlineRenderer (options, explorer, title, selectionService, hasChildren) {
 		this.explorer = explorer;
 		this._init(options);
 		this.title = title;
 		this.selectionService = selectionService;
+		this.hasChildren = hasChildren;
 	}
 	
 	OutlineRenderer.prototype = mExplorer.SelectionRenderer.prototype;
@@ -32,7 +33,7 @@ define(['i18n!orion/nls/messages', 'dojo', 'orion/util', 'orion/section', 'orion
 		if (item.className) {
 			dojo.addClass(elementNode, item.className);
 		}
-		if (item.children) {
+		if (this.hasChildren(item)) {
 			this.getExpandImage(tableRow, elementNode);
 		}
 		if (item.href) {
@@ -72,14 +73,14 @@ define(['i18n!orion/nls/messages', 'dojo', 'orion/util', 'orion/section', 'orion
 	};
 	
 
-	function OutlineExplorer(serviceRegistry, selection, title) {
+	function OutlineExplorer(serviceRegistry, selection, title, hasChildren) {
 		/*	we intentionally do not do this:
 				this.selection = selection;
 			Our renderer is going to trigger the selection events using specialized URL's when an outline
 			link is clicked.  We don't want the explorer triggering selection events on the outline model item
 		*/
 		this.registry = serviceRegistry;
-		this.renderer = new OutlineRenderer({checkbox: false, decorateAlternatingLines: false, treeTableClass: "outlineExplorer"}, this, title, selection);  //$NON-NLS-0$ 
+		this.renderer = new OutlineRenderer({checkbox: false, decorateAlternatingLines: false, treeTableClass: "outlineExplorer"}, this, title, selection, hasChildren);  //$NON-NLS-0$ 
 	}
 	OutlineExplorer.prototype = mExplorer.Explorer.prototype;	
 	OutlineExplorer.prototype.constructor = OutlineExplorer;
@@ -132,6 +133,20 @@ define(['i18n!orion/nls/messages', 'dojo', 'orion/util', 'orion/section', 'orion
 			onComplete(parentItem.children);
 		} else {
 			onComplete([]);
+		}
+	};
+	
+	OutlineModel.prototype.hasChildren = function(parentItem) {
+		return parentItem.children;
+	};
+	
+	OutlineModel.prototype.doExpansions = function(tree) {
+		// until we give the outliner a way to specify this, do the first level only.
+		// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=389547
+		for (var i=0; i < this.items.length; i++) {
+			if (this.items[i].children) {
+				tree.expand(this.items[i]);
+			}
 		}
 	};
 
@@ -209,16 +224,16 @@ define(['i18n!orion/nls/messages', 'dojo', 'orion/util', 'orion/section', 'orion
 			}
 			var contentNode = dojo.byId("outlineSectionContent"); //$NON-NLS-0$
 			dojo.empty(contentNode);
-			outlineModel = outlineModel instanceof Array ? outlineModel : [outlineModel];
-			if (outlineModel) {
-				this.explorer = new OutlineExplorer(this._serviceRegistry, this._selectionService, title);
-				this.explorer.createTree("outlineSectionContent", new OutlineModel(outlineModel), {selectionPolicy: "cursorOnly", setFocus: false}); //$NON-NLS-1$ //$NON-NLS-0$
-				// expand the first level of the model
-				for (var i=0; i < outlineModel.length; i++) {
-					if (outlineModel[i].children) {
-						this.explorer.myTree.expand(outlineModel[i]);
-					}
-				}
+			var model;
+			if (outlineModel.model) {
+				model = outlineModel.model;
+			} else {
+				model = new OutlineModel(outlineModel instanceof Array ? outlineModel : [outlineModel]);
+			}
+			if (model) {
+				this.explorer = new OutlineExplorer(this._serviceRegistry, this._selectionService, title, model.hasChildren);
+				this.explorer.createTree("outlineSectionContent", model, {selectionPolicy: "cursorOnly", setFocus: false}); //$NON-NLS-1$ //$NON-NLS-0$
+				model.doExpansions(this.explorer.myTree);
 			}
 		},
 		_menuCallback: function() {

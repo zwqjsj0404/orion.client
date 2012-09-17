@@ -14,13 +14,13 @@
 
 define(['i18n!orion/edit/nls/messages', 'require', 'dojo', 'orion/selection', 'orion/status', 'orion/progress', 'orion/dialogs',
         'orion/commands', 'orion/util', 'orion/favorites', 'orion/fileClient', 'orion/operationsClient', 'orion/searchClient', 'orion/globalCommands', 'orion/outliner',
-        'orion/problems', 'orion/editor/contentAssist', 'orion/editorCommands', 'orion/editor/editorFeatures', 'orion/editor/editor', 'orion/syntaxchecker',
+        'orion/fileTreeOutliner', 'orion/problems', 'orion/editor/contentAssist', 'orion/editorCommands', 'orion/editor/editorFeatures', 'orion/editor/editor', 'orion/syntaxchecker',
         'orion/textview/textView', 'orion/textview/textModel', 
         'orion/textview/projectionTextModel', 'orion/textview/keyBinding','orion/searchAndReplace/textSearcher',
         'orion/edit/dispatcher', 'orion/contentTypes', 'orion/PageUtil', 'orion/highlight', "orion/i18nUtil",
        'dojo/hash'], 
 		function(messages, require, dojo, mSelection, mStatus, mProgress, mDialogs, mCommands, mUtil, mFavorites,
-				mFileClient, mOperationsClient, mSearchClient, mGlobalCommands, mOutliner, mProblems, mContentAssist, mEditorCommands, mEditorFeatures, mEditor,
+				mFileClient, mOperationsClient, mSearchClient, mGlobalCommands, mOutliner, mFileTreeOutliner, mProblems, mContentAssist, mEditorCommands, mEditorFeatures, mEditor,
 				mSyntaxchecker, mTextView, mTextModel, mProjectionTextModel, mKeyBinding, mSearcher,
 				mDispatcher, mContentTypes, PageUtil, Highlight, i18nUtil) {
 	
@@ -35,7 +35,7 @@ exports.setUpEditor = function(serviceRegistry, preferences, isReadOnly){
 	var outlineService;
 	var contentTypeService;
 	
-	// Initialize the plugin registry
+	// Initialize the services we use.
 	(function() {
 		selection = new mSelection.Selection(serviceRegistry);
 		var operationsClient = new mOperationsClient.OperationsClient(serviceRegistry);
@@ -58,6 +58,7 @@ exports.setUpEditor = function(serviceRegistry, preferences, isReadOnly){
 	var syntaxHighlighter = new Highlight.SyntaxHighlighter(serviceRegistry);
 	var fileClient = new mFileClient.FileClient(serviceRegistry);
 	var searcher = new mSearchClient.Searcher({serviceRegistry: serviceRegistry, commandService: commandService, fileService: fileClient});
+	new mFileTreeOutliner.FileTreeOutliner({serviceRegistry: serviceRegistry, fileService: fileClient});
 	
 	var textViewFactory = function() {
 		var textView = new mTextView.TextView({
@@ -483,7 +484,11 @@ exports.setUpEditor = function(serviceRegistry, preferences, isReadOnly){
 	// Generically speaking, we respond to changes in selection.  New selections change the editor's input.
 	selection.addEventListener("selectionChanged", function(event) { //$NON-NLS-1$ //$NON-NLS-0$
 		var fileURI = event.selection;
+		var inputChanged = PageUtil.matchResourceParameters("#" + dojo.hash()).resource !== PageUtil.matchResourceParameters("#" + fileURI).resource; //$NON-NLS-1$ //$NON-NLS-0$
 		if (inputManager.shouldGoToURI(editor, fileURI)) {
+			if (inputChanged) { // changing files means we need to update the browser bar.
+				dojo.hash(fileURI);
+			} 
 			inputManager.setInput(fileURI, editor);
 		} 
 	});

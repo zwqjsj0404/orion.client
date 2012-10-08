@@ -63,10 +63,21 @@ exports.EditorCommandFactory = (function() {
 			}
 	
 			function handleError(error) {
-				error = error || "Unknown error";
-				var statusService = serviceRegistry.getService("orion.page.message");
+				var errorToDisplay = {};
+				errorToDisplay.Severity = "Error"; //$NON-NLS-0$
+				if (error.status === 0) {
+					errorToDisplay.HTML = true;
+					errorToDisplay.Message = "<span>" + dojo.string.substitute(messages['No response from server.  If you have an internet connection, you can try to ${0}.'], //$NON-NLS-1$//$NON-NLS-0$
+						["<a href=\"" + window.location.protocol + "//" + window.location.host + "/mixloginstatic/LoginWindow.html?redirect=" + //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+						window.encodeURIComponent(window.location) + "\">"+messages['Login to Orion']+"</a>"])+"</span>"; //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+				} else {
+					errorToDisplay = error;
+				}
+				var statusService = serviceRegistry.getService("orion.page.message"); //$NON-NLS-0$
 				if (statusService) {
-					statusService.setErrorMessage(error);
+					statusService.setProgressResult(errorToDisplay);
+				} else {
+					window.console.log(errorToDisplay);
 				}
 			}
 
@@ -120,8 +131,6 @@ exports.EditorCommandFactory = (function() {
 														}
 													}, handleError));
 										}
-									} else if (error.status === 0) {
-										handleError("No response from server.")
 									} else {
 										// unknown error
 										handleError(error);

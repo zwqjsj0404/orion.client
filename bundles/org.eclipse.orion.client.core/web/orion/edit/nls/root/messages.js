@@ -28,5 +28,7 @@ define({
 	"Go to line:": "Go to line:",
 	"Undo": "Undo",
 	"Redo": "Redo",
-	"Find": "Find"
+	"Find": "Find",
+	"No response from server.  If you have an internet connection, you can try to ${0}.": "No response from server.  If you have an internet connection, you can try to ${0}.",
+	"Login to Orion": "Login to Orion"
 });

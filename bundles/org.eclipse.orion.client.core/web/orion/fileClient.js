@@ -35,17 +35,25 @@ define(['i18n!orion/navigate/nls/messages', "orion/Deferred", "orion/auth",  "or
 			//on failure we might need to retry
 			function(error) {
 				if (error.status === 401) {
-					mAuth.handleAuthenticationError(error, function(message) {
-						//try again
-						fileService[funcName].apply(fileService, funcArgs).then(
-							function(result) {
-								clientDeferred.resolve(result);
-							},
-							function(error) {
-								clientDeferred.reject(error);
-							}
-						);
-					});
+					try {
+						mAuth.handleAuthenticationError(error, function(message) {
+							//try again
+							fileService[funcName].apply(fileService, funcArgs).then(
+								function(result) {
+									clientDeferred.resolve(result);
+								},
+								function(error) {
+									clientDeferred.reject(error);
+								}
+							);
+						});
+					} catch(e) {
+						//error trying to handle the auth failure
+						if (typeof console !== "undefined") { //$NON-NLS-0$
+							console.log(e);
+						}
+						clientDeferred.reject(error);
+					}
 				} else {
 					//forward other errors to client
 					clientDeferred.reject(error);

@@ -67,7 +67,7 @@ define(["orion/Deferred", "orion/xhr", "orion/es5shim"], function(Deferred, xhr)
 				timeout: 15000
 			}).then(function(result) {
 				var jsonData = result.response ? JSON.parse(result.response) : {};
-				return jsonData.Workspaces;
+				return jsonData;
 			});
 		},
 

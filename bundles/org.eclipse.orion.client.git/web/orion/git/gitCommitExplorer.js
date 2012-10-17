@@ -296,7 +296,7 @@ define(['i18n!git/nls/gitmessages', 'dojo', 'orion/section', 'orion/explorers/ex
 
 			var sectionItemActionScopeId = "diffSectionItemActionArea"; //$NON-NLS-0$
 			
-			DiffModel = (function() {
+			var DiffModel = (function() {
 				function DiffModel() {
 				}
 				
@@ -334,7 +334,7 @@ define(['i18n!git/nls/gitmessages', 'dojo', 'orion/section', 'orion/explorers/ex
 				return DiffModel;
 			}());
 			
-			DiffRenderer = (function() {
+			var DiffRenderer = (function() {
 				function DiffRenderer (options, explorer) {
 					this._init(options);
 					this.options = options;
@@ -429,7 +429,7 @@ define(['i18n!git/nls/gitmessages', 'dojo', 'orion/section', 'orion/explorers/ex
 				return DiffRenderer;
 			}());
 			
-			DiffNavigator = (function() {
+			var DiffNavigator = (function() {
 				function DiffNavigator(registry, selection, parentId, actionScopeId) {
 					this.registry = registry;
 					this.checkbox = false;

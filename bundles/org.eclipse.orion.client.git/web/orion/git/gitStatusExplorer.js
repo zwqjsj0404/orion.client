@@ -344,7 +344,7 @@ define(['i18n!git/nls/gitmessages', 'dojo', 'orion/explorers/explorer', 'orion/s
 						
 			this.commandService.registerCommandContribution("DefaultActionWrapper", "eclipse.orion.git.stageCommand", 100);
 			
-			UnstagedModel = (function() {
+			var UnstagedModel = (function() {
 				function UnstagedModel() {
 				}
 				
@@ -381,7 +381,7 @@ define(['i18n!git/nls/gitmessages', 'dojo', 'orion/explorers/explorer', 'orion/s
 				return UnstagedModel;
 			}());
 			
-			UnstagedRenderer = (function() {
+			var UnstagedRenderer = (function() {
 				function UnstagedRenderer (options, explorer) {
 					this._init(options);
 					this.options = options;
@@ -466,7 +466,7 @@ define(['i18n!git/nls/gitmessages', 'dojo', 'orion/explorers/explorer', 'orion/s
 				return UnstagedRenderer;
 			}());
 			
-			UnstagedNavigator = (function() {
+			var UnstagedNavigator = (function() {
 				function UnstagedNavigator(registry, selection, parentId, actionScopeId) {
 					this.registry = registry;
 					this.checkbox = false;
@@ -542,7 +542,7 @@ define(['i18n!git/nls/gitmessages', 'dojo', 'orion/explorers/explorer', 'orion/s
 			
 			this.commandService.registerCommandContribution("DefaultActionWrapper", "eclipse.orion.git.unstageCommand", 100); //$NON-NLS-0$
 			
-			StagedModel = (function() {
+			var StagedModel = (function() {
 				function StagedModel() {
 				}
 				
@@ -579,7 +579,7 @@ define(['i18n!git/nls/gitmessages', 'dojo', 'orion/explorers/explorer', 'orion/s
 				return StagedModel;
 			}());
 			
-			StagedRenderer = (function() {
+			var StagedRenderer = (function() {
 				function StagedRenderer (options, explorer) {
 					this._init(options);
 					this.options = options;
@@ -664,7 +664,7 @@ define(['i18n!git/nls/gitmessages', 'dojo', 'orion/explorers/explorer', 'orion/s
 				return StagedRenderer;
 			}());
 			
-			StagedNavigator = (function() {
+			var StagedNavigator = (function() {
 				function StagedNavigator(registry, selection, parentId, actionScopeId) {
 					this.registry = registry;
 					this.checkbox = false;

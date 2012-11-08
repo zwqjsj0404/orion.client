@@ -16,8 +16,8 @@
 /**
  * @namespace The global container for orion APIs.
  */ 
-define(['i18n!orion/edit/nls/messages', 'dojo', 'orion/commands', 'orion/globalCommands', 'orion/extensionCommands', 'orion/contentTypes', 'orion/textview/keyBinding', 'orion/textview/undoStack', 'orion/searchUtils'], 
-	function(messages, dojo, mCommands, mGlobalCommands, mExtensionCommands, mContentTypes, mKeyBinding, mUndoStack, mSearchUtils) {
+define(['i18n!orion/edit/nls/messages', 'dojo', 'orion/commands', 'orion/globalCommands', 'orion/URITemplate', 'orion/Deferred', 'orion/extensionCommands', 'orion/contentTypes', 'orion/textview/keyBinding', 'orion/textview/undoStack', 'orion/searchUtils'], 
+	function(messages, dojo, mCommands, mGlobalCommands, URITemplate, Deferred, mExtensionCommands, mContentTypes, mKeyBinding, mUndoStack, mSearchUtils) {
 
 var exports = {};
 
@@ -331,28 +331,54 @@ exports.EditorCommandFactory = (function() {
 				var input = this.inputManager;
 				var makeCommand = function(info, service, options) {
 					options.callback = dojo.hitch(editor, function(data) {
-							// command service will provide editor parameter but editor widget callback will not
-							editor = data ? data.items || this : this;
-							var selection = editor.getSelection();
-							var model = editor.getModel();
-							var text = model.getText();
-							service.run(model.getText(selection.start,selection.end),text,selection, input.getInput()).then(function(result){
-								if (result && result.text) {
-									editor.setText(result.text);
-									if (result.selection) {
-										editor.setSelection(result.selection.start, result.selection.end);
-										editor.getTextView().focus();
-									}
-								} else {
-									if (typeof result === 'string') { //$NON-NLS-0$
-										editor.setText(result, selection.start, selection.end);
-										editor.setSelection(selection.start, selection.start + result.length);
-										editor.getTextView().focus();
+						// command service will provide editor parameter but editor widget callback will not
+						editor = data ? data.items || this : this;
+						var selection = editor.getSelection();
+						var model = editor.getModel();
+						var text = model.getText();
+						var deferred;
+						if (info.uiURITemplate) {
+							deferred = new Deferred();
+							var uriTemplate = new URITemplate(info.uiURITemplate);
+							var href = uriTemplate.expand(input.getFileMetadata());
+							var iframe = dojo.create('iframe', 
+								{id: info.id, name: info.id, type: "text/html", frameborder: "1", src: href, style: "position: absolute; min-width: 600px; min-height: 400px; left: 150px; top: 150px; z-index: 150;"}, 
+								window.document.body, "last");
+							// Listen for notification from the iframe.  This should eventually belong as part of the plugin registry.
+							// This mechanism should become generalized into a "page services" API for plugin iframes to contact the outer context.
+							dojo.connect(window, "message", function(event) { //$NON-NLS-0$
+								if (typeof event.data === "string") { //$NON-NLS-0$
+									var data = JSON.parse(event.data);
+									if (data.pageService === "orion.page.delegatedUI" && data.source === info.id) { //$NON-NLS-0$
+										if (data.cancelled) {
+											deferred.cancel();
+										} else if (data.result) {
+											deferred.resolve(data.result);
+										}
+										window.document.body.removeChild(iframe);
 									}
 								}
 							});
-							return true;
+						} else {
+							deferred = service.run(model.getText(selection.start,selection.end),text,selection, input.getInput()); 
+						}
+						deferred.then(function(result){
+							if (result && result.text) {
+								editor.setText(result.text);
+								if (result.selection) {
+									editor.setSelection(result.selection.start, result.selection.end);
+									editor.getTextView().focus();
+								}
+							} else {
+								if (typeof result === 'string') { //$NON-NLS-0$
+									editor.setText(result, selection.start, selection.end);
+									editor.setSelection(selection.start, selection.start + result.length);
+									editor.getTextView().focus();
+								}
+							}
 						});
+						return true;
+					});
 					return new mCommands.Command(options);
 				};
 				dojo.when(getContentTypes(this.serviceRegistry), dojo.hitch(this, function() {

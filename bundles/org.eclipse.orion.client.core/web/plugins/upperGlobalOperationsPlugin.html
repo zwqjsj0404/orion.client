@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<script type="text/javascript" src="../orion/plugin.js"></script>
+	<script type="text/javascript" src="../orion/Deferred.js"></script>
+
+	<script>
+		window.onload = function() {
+			var provider = new orion.PluginProvider();
+			
+			var longPolling = [];
+			
+			//keep operations in localStorage, so that they can be visible on other pages
+			function writeTask(task){
+				var tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+				tasks[task.Id] = task;
+				localStorage.setItem("tasks", JSON.stringify(tasks));
+				var lastTaskNo = parseInt(localStorage.getItem("taskNo")||0);
+				if(lastTaskNo<task.Id){
+					localStorage.setItem("taskNo", ++lastTaskNo);
+				}
+				localStorage.setItem("taskChanged", JSON.stringify(task));
+				longpollingChange("taskChanged");
+			}
+			
+			function readTask(taskLocation){
+				var tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+				var taskNo = parseInt(taskLocation.substring(taskLocation.indexOf(":")+1));
+				var task = tasks[taskNo];
+				if(!task){
+					return { Result: {Severity: "Ok", JsonData: {}}};
+				}
+				return task;
+			}
+			
+			function deleteTask(taskLocation){
+				var tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+				var taskNo = parseInt(taskLocation.substring(taskLocation.indexOf(":")+1));
+				var task = tasks[taskNo];
+				delete tasks[taskNo];
+				localStorage.setItem("tasks", JSON.stringify(tasks));
+				localStorage.setItem("taskDeleted", task.Id);
+				longpollingChange("taskDeleted");
+			}
+			
+			function getAllTasks(){
+				var tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+				var children = [];
+				for(var i in tasks){
+					if(tasks[i]){
+						children.push(tasks[i]);
+					}
+				}
+				return {Children: children};
+			}
+			
+			/* Operations client is notified via longpolling. Every time a change in operations is made
+			   notify all the registered requests.*/
+			function longpollingChange(key){
+			if(key==="taskChanged"){
+				var task = JSON.parse(localStorage.getItem("taskChanged"));
+					for(var i=0; i<longPolling.length; i++){
+						var taskFound = false;
+						for(var j=0; j<longPolling[i].Children.length; j++){
+							if(longPolling[i].Children[j].Id === task.Id){
+								longPolling[i].Children[j] = task;
+								taskFound = true;
+								break;
+							}
+						}
+						if(!taskFound)
+							longPolling[i].Children.push(task);
+					}
+					notifyLongpolling();
+				} else if(key==="taskDeleted"){
+					var task = localStorage.getItem("taskDeleted");
+					for(var i=0; i<longPolling.length; i++){
+						longPolling[i].DeletedChildren.push(task);
+					}
+					notifyLongpolling();
+				}
+			}
+			
+			/* use localStorage events to send longpolling notifications to clients registered 
+			   to every instance of this plugin */
+			window.addEventListener('storage', function (e) {longpollingChange(e.key);});
+			
+			function notifyLongpolling(longpollingId){
+			if(typeof longpollingId === 'undefined'){
+				for(var i in longPolling){
+					notifyLongpolling(i);
+				}
+				return;
+			}
+				setTimeout(function(){
+					var resp = longPolling[longpollingId];
+						if(resp.deferred){
+							var respDeferred = resp.deferred;
+							delete resp.deferred;
+							respDeferred.resolve(resp);
+						}
+						longPolling[longpollingId] = {Children: [], DeletedChildren:[]};
+				}, 100);
+			}
+			
+			
+			var serviceImpl = {
+				run : function(text) {
+				
+				//instead of returning an aswer we return the task description				
+				var taskNo = parseInt(localStorage.getItem("taskNo") || 0)+1;
+				var task = {
+					"CanBeCanceled": false,
+					"Running": true,
+					  "Created": new Date().getTime(),
+					  "Id": taskNo,
+					  "Idempotent": true,
+					  "Location": "upperGlobalPlugin:"+taskNo,
+					  "Message": "Generating to upper " + text,
+					  "Modified": new Date().getTime(),
+					  "Name": taskNo + ": Generating to upper " + text,
+					  "PercentComplete": 0
+					};
+					
+				writeTask(task);
+				
+				//this simulates generating uppercase to be a long running operation
+				window.setTimeout(function() {
+							task.Running = false;
+							task.Result = {Severity: "Ok", JsonData: text.toUpperCase(), Message: "Generated to upper"};
+							writeTask(task);
+						}, 10000);
+					
+					return {task: task};
+				}
+			};
+			var serviceProps = {
+				name : "UPPERCASE",
+				img : "../images/gear.gif",
+				key : [ "u", true ]
+			};
+			
+			
+			var tasksImpl = {
+				getOperation: function(taskLocation) {
+					return readTask(taskLocation);
+				},
+				removeOperation: function(taskLocation) {
+					deleteTask(taskLocation);
+				},
+				getOperations: function(options) {
+					var resp = {LocalTimeStamp: new Date().getTime()};
+					//Longpolling argument meens that the response must be send when the changes occur
+					if(options.Longpolling == true){
+						if(options.LongpollingId){
+							/* LongpollingId tells us which client are we dealing with.
+							   We should send the list of tasks that where changed only since the last response to this longpolling client */
+							var def = new orion.Deferred();
+							longPolling[options.LongpollingId].deferred = def;
+							return def.promise;
+						} else {
+							// For the first longpolling request we send the response straightaway with current tasks list and generated longpollingId
+							var longpollingId = longPolling.length;
+							longPolling.push({Children: [], DeletedChildren:[], LongpollingId: longpollingId});
+							resp.LongpollingId = longpollingId;
+						}
+					}
+					resp.Children = getAllTasks().Children;
+					resp.DeletedChildren = [];
+					return resp;
+				},
+				getRunningOperations: function(){
+					var resp = {LocalTimeStamp: new Date().getTime(), Children:[]};
+					var allOperations = getAllTasks().Children || [];
+					for(var i=0; i<allOperations.length; i++){
+						if(allOperations[i].Running){
+							resp.Children.push(allOperations[i]);
+						}
+					}
+					return resp;
+				},
+				removeCompletedOperations: function(){
+					var allOperations = getAllTasks().Children || [];
+					for(var i=0; i<allOperations.length; i++){
+						if(!allOperations[i].Running){
+							deleteTask(allOperations[i].Location);
+						}
+					}
+				},
+				cancelOperation: function(operationLocation){
+					//no cancelling
+				}
+			};
+			
+			var tasksProps = {
+				name: "UPPERCASE TASKS",
+				pattern: "upperGlobalPlugin:",
+				global: true
+			};
+			
+			provider.registerService("orion.edit.command", serviceImpl, serviceProps);
+			provider.registerService("orion.core.operation", tasksImpl, tasksProps);
+			provider.connect();
+		};
+	</script>
+</head>
+<body>
+<h1>Uppercase plugin for Orion</h1>
+<p>This is a plugin for <a href="http://wiki.eclipse.org/Orion/">Orion</a>. It is not meant to be viewed in a browser.</p>
+</body>
+</html>

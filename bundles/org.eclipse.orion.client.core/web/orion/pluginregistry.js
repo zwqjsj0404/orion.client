@@ -110,7 +110,7 @@ define(["orion/Deferred", "orion/EventTarget"], function(Deferred, EventTarget){
 	 * </dd>
 	 * @name orion.pluginregistry.Plugin
 	 */
-	function Plugin(_url, _manifest, _internalRegistry) {
+	function Plugin(_url, _manifest, _internalRegistry, _serviceRegistry) {
 		var _this = this;
 		_manifest = _manifest || {};
 		var _created = _manifest.created || new Date().getTime();
@@ -221,6 +221,10 @@ define(["orion/Deferred", "orion/EventTarget"], function(Deferred, EventTarget){
 			});
 		}
 		
+		function _isTask(message){
+			return (message.result && !!message.result.task);
+		}
+		
 		function _responseHandler(message) {
 			var deferred;
 			try {
@@ -257,7 +261,17 @@ define(["orion/Deferred", "orion/EventTarget"], function(Deferred, EventTarget){
 						var error = _internalRegistry.handleServiceError(_this, message.error);
 						deferred.reject(error);
 					} else {
-						deferred.resolve(message.result);
+						if(_isTask(message)){
+							_serviceRegistry.getService("orion.page.progress").followOperation(message.result.task).then(function(progressResp){
+								if(progressResp.Result.Severity === "Ok") {
+									deferred.resolve(progressResp.Result.JsonData);
+								} else {
+									deferred.reject(progressResp.Result);
+								}
+							});
+						} else {
+							deferred.resolve(message.result);
+						}
 					}
 				}
 			} catch (e) {
@@ -813,7 +827,7 @@ define(["orion/Deferred", "orion/EventTarget"], function(Deferred, EventTarget){
 					var url = key.substring("plugin.".length);
 					var manifest = JSON.parse(_storage.getItem(key));
 					if (manifest.created) {
-						_plugins.push(new Plugin(url, manifest, internalRegistry));
+						_plugins.push(new Plugin(url, manifest, internalRegistry, serviceRegistry));
 					}
 				}
 			});
@@ -833,7 +847,7 @@ define(["orion/Deferred", "orion/EventTarget"], function(Deferred, EventTarget){
 						var manifest = configuration.plugins[url];
 						manifest = typeof manifest === "object" || {};
 						manifest.autostart = manifest.autostart || configuration.defaultAutostart || "lazy";
-						_plugins.push(new Plugin(url, manifest, internalRegistry));
+						_plugins.push(new Plugin(url, manifest, internalRegistry, serviceRegistry));
 					}
 				}.bind(this));
 			}
@@ -933,7 +947,7 @@ define(["orion/Deferred", "orion/EventTarget"], function(Deferred, EventTarget){
 			}
 			
 			if (optManifest) {
-				plugin = new Plugin(url, optManifest, internalRegistry);
+				plugin = new Plugin(url, optManifest, internalRegistry, serviceRegistry);
 				_plugins.push(plugin);
 				plugin._persist();
 				internalRegistry.dispatchEvent(new PluginEvent("installed", plugin));
@@ -941,7 +955,7 @@ define(["orion/Deferred", "orion/EventTarget"], function(Deferred, EventTarget){
 			}
 						
 			var promise = internalRegistry.loadManifest(url).then(function(manifest) {
-				plugin = new Plugin(url, manifest, internalRegistry);
+				plugin = new Plugin(url, manifest, internalRegistry, serviceRegistry);
 				_plugins.push(plugin);
 				plugin._persist();
 				delete _installing[url];

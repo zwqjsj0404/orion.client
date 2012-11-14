@@ -95,7 +95,8 @@ define(["orion/xhr", "orion/plugin", "domReady!"], function(xhr, PluginProvider)
 		}
 	}, {
 		name: "Tasks",
-		pattern: base
+		pattern: base,
+		global:true
 	});
 	provider.connect();
 });

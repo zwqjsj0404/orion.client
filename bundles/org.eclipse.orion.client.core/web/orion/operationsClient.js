@@ -54,6 +54,7 @@ define(['i18n!orion/operations/nls/messages', "orion/Deferred"], function(messag
 	
 	function OperationsClient(serviceRegistry){
 		this._services = [];
+		this._globalServices = [];
 		this._patterns = [];
 		this._operationListeners = [];
 		this._currentLongpollingIds = [];
@@ -62,6 +63,9 @@ define(['i18n!orion/operations/nls/messages', "orion/Deferred"], function(messag
 			var servicePtr = operationsServices[i];
 			var operationsService = serviceRegistry.getService(servicePtr);
 			this._services[i] = operationsService;
+			if(operationsServices[i].getProperty("global")){ //$NON-NLS-0$
+				this._globalServices.push(operationsService);
+			}
 			
 			var patternString = operationsServices[i].getProperty("pattern") || ".*"; //$NON-NLS-1$ //$NON-NLS-0$
 			if (patternString[0] !== "^") { //$NON-NLS-0$
@@ -131,8 +135,8 @@ define(['i18n!orion/operations/nls/messages', "orion/Deferred"], function(messag
 			getOperations: function(){
 				var results = [];
 
-				for(var i=0; i<this._services.length; i++){
-					results[i] = _getOperations(this._services[i]);
+				for(var i=0; i<this._globalServices.length; i++){
+					results[i] = _getOperations(this._globalServices[i]);
 				}
 				return Deferred.all(results).then(function(lists){
 					return _mergeOperations(lists);
@@ -141,8 +145,8 @@ define(['i18n!orion/operations/nls/messages', "orion/Deferred"], function(messag
 			getRunningOperations: function(){
 				var results = [];
 
-				for(var i=0; i<this._services.length; i++){
-					results[i] = _getOperations(this._services[i], {RunningOnly: true});
+				for(var i=0; i<this._globalServices.length; i++){
+					results[i] = _getOperations(this._globalServices[i], {RunningOnly: true});
 				}
 				return Deferred.all(results).then(function(lists){
 					return _mergeOperations(lists);
@@ -153,8 +157,8 @@ define(['i18n!orion/operations/nls/messages', "orion/Deferred"], function(messag
 			},
 			removeCompletedOperations: function(){
 				var results = [];
-				for(var i=0; i<this._services.length; i++){
-					results[i] = _doServiceCall(this._services[i], "removeCompletedOperations"); //$NON-NLS-0$
+				for(var i=0; i<this._globalServices.length; i++){
+					results[i] = _doServiceCall(this._globalServices[i], "removeCompletedOperations"); //$NON-NLS-0$
 				}
 				return Deferred.all(results);
 			},
@@ -170,11 +174,11 @@ define(['i18n!orion/operations/nls/messages', "orion/Deferred"], function(messag
 			addOperationChangeListener: function(listener){
 				this._operationListeners.push(listener);
 				if(this._operationListeners.length===1){
-					if(this._services.length<1){
+					if(this._globalServices.length<1){
 						throw messages["No operations services registered."];
 					}
-					for(var i=0; i<this._services.length; i++){
-						_registerOperationChangeListener.bind(this)(this._services[i], _notifyChangeListeners.bind(this));
+					for(var i=0; i<this._globalServices.length; i++){
+						_registerOperationChangeListener.bind(this)(this._globalServices[i], _notifyChangeListeners.bind(this));
 					}
 				}
 			},
@@ -194,11 +198,11 @@ define(['i18n!orion/operations/nls/messages', "orion/Deferred"], function(messag
 			
 			resetChangeListeners: function(){
 				this._currentLongpollingIds = [];
-				if(this._services.length<1){
+				if(this._globalServices.length<1){
 					throw messages['No operations services registered.'];
 				}
-				for(var i=0; i<this._services.length; i++){
-					_registerOperationChangeListener.bind(this)(this._services[i], _notifyChangeListeners.bind(this));
+				for(var i=0; i<this._globalServices.length; i++){
+					_registerOperationChangeListener.bind(this)(this._globalServices[i], _notifyChangeListeners.bind(this));
 				}
 			}
 	};

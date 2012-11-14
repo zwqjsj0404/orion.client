@@ -65,7 +65,7 @@ define(['i18n!orion/operations/nls/messages',  'require', 'dojo', 'orion/explore
 					var operationToDelete = operationsToMerge.DeletedChildren[j]; 
 					for(var i=0; i<this.operations.Children.length; i++){
 						var operation = this.operations.Children[i];
-						if(operationToDelete === operation.Id){
+						if(operationToDelete == operation.Id){
 							this.operations.Children.splice(i, 1);
 							break;
 						}

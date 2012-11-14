@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<script type="text/javascript" src="../orion/plugin.js"></script>
+	<script>
+		window.onload = function() {
+		
+			/* Tasks are local for this plugin instance. They will be visible by the Orion page that started them,
+			   but it not by other pages including the Operations page. User will not be able to see how the task
+			   finished after closing or reloading that page that started it.
+			   If you want your operations to be visible globally see upperGlobalOperationsPlugin.html */
+			var tasksNo = 0;
+			var tasks = {};
+		
+			var provider = new orion.PluginProvider();
+			var serviceImpl = {
+				run : function(text) {
+					var taskNo = tasksNo++;
+					//instead of returning an aswer we return the task description
+					var task = {
+						"CanBeCanceled": false,
+						"Running": true,
+						  "Created": new Date().getTime(),
+						  "Id": taskNo,
+						  "Idempotent": true,
+						  "Location": "upperPlugin:"+taskNo,
+						  "Message": "Generating to upper " + text,
+						  "Modified": new Date().getTime(),
+						  "Name": taskNo + ": Generating to upper " + text,
+						  "PercentComplete": 0
+						};
+						
+					tasks[task.Location] = task;
+					
+					//this simulates generating uppercase to be a long running operation
+					window.setTimeout(function() {
+								task.Running = false;
+								task.Result = {Severity: "Ok", JsonData: text.toUpperCase(), Message: "Generated to upper"};
+								tasks[task.Location] = task;
+							}, 10000);
+					
+					return {task: task};
+				}
+			};
+			var serviceProps = {
+				name : "UPPERCASE",
+				img : "../images/gear.gif",
+				key : [ "u", true ]
+			};
+			
+			
+			var tasksImpl = {
+				getOperation: function(taskLocation) {
+					return tasks[taskLocation];
+				},
+				removeOperation: function(taskLocation) {
+					delete tasks[taskLocation];
+				}
+			};
+			
+			var tasksProps = {
+				name: "UPPERCASE TASKS",
+				pattern: "upperPlugin:"
+			};
+			
+			
+			provider.registerService("orion.edit.command", serviceImpl, serviceProps);
+			provider.registerService("orion.core.operation", tasksImpl, tasksProps);
+			provider.connect();
+		};
+	</script>
+</head>
+<body>
+</body>
+</html>

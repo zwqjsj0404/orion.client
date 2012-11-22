@@ -915,13 +915,13 @@ eclipse.GitService = (function() {
 		},
 		_getGitServiceResponse: function(clientDeferred, jsonData, xhrArgs){
 			if(xhrArgs && xhrArgs.xhr.status === 202){
-				var deferred = new dojo.Deferred();
-				deferred.callback(jsonData);
-				return this._serviceRegistry.getService("orion.page.progress").showWhile(deferred).then(function(progressResp) { //$NON-NLS-0$
-					var returnData = progressResp.Result.Severity === "Ok" ? progressResp.Result.JsonData : progressResp.Result; //$NON-NLS-0$
-					clientDeferred.callback(returnData);
-					return;
-				});
+				return this._serviceRegistry.getService("orion.page.progress").followOperation(jsonData).then(function(progressResp) { //$NON-NLS-0$
+						clientDeferred.resolve(progressResp);
+					}, function(error){
+						clientDeferred.reject(error);
+					}, function(progress){
+						clientDeferred.progress(progress);
+					});
 			}
 			clientDeferred.callback(jsonData);
 			return;

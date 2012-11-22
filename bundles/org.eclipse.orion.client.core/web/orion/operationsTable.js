@@ -38,34 +38,36 @@ define(['i18n!orion/operations/nls/messages',  'require', 'dojo', 'orion/explore
 				this.loadOperations(operationsToMerge);
 				return;
 			}
-			if(!operationsToMerge || (!operationsToMerge.Children && !operationsToMerge.DeletedChildren) || (operationsToMerge.Children.length===0 && operationsToMerge.DeletedChildren.length===0)){
+			if(!operationsToMerge || ((!operationsToMerge.Children || operationsToMerge.Children.length===0) && (!operationsToMerge.DeletedChildren || operationsToMerge.DeletedChildren.length===0))){
 				return;
 			}
 			var newOperations = [];
-			for(var j=0; j<operationsToMerge.Children.length; j++){
-				var operationToMerge = operationsToMerge.Children[j];
-				var foundOperation = false;
-				for(var i=0; i<this.operations.Children.length; i++){
-					var operation = this.operations.Children[i];
-					if(operation.Location===operationToMerge.Location){
-						this.operations.Children[i] = operationToMerge;
-						foundOperation = true;
-						break;
+			if(operationsToMerge.Children){
+				for(var j=0; j<operationsToMerge.Children.length; j++){
+					var operationToMerge = operationsToMerge.Children[j];
+					var foundOperation = false;
+					for(var i=0; i<this.operations.Children.length; i++){
+						var operation = this.operations.Children[i];
+						if(operation.Location===operationToMerge.Location){
+							this.operations.Children[i] = operationToMerge;
+							foundOperation = true;
+							break;
+						}
+					}
+					if(!foundOperation){
+						newOperations.push(operationToMerge);
 					}
 				}
-				if(!foundOperation){
-					newOperations.push(operationToMerge);
-				}
+				for(var i=0; i<newOperations.length; i++)
+					this.operations.Children.unshift(newOperations[i]);
 			}
-			for(var i=0; i<newOperations.length; i++)
-				this.operations.Children.unshift(newOperations[i]);
 			
 			if(operationsToMerge.DeletedChildren){
 				for(var j=0; j<operationsToMerge.DeletedChildren.length; j++){
 					var operationToDelete = operationsToMerge.DeletedChildren[j]; 
 					for(var i=0; i<this.operations.Children.length; i++){
 						var operation = this.operations.Children[i];
-						if(operationToDelete === operation.Id){
+						if(operationToDelete == operation.Location){
 							this.operations.Children.splice(i, 1);
 							break;
 						}

@@ -45,20 +45,6 @@ define(['i18n!orion/nls/messages', 'require', 'dojo', 'orion/globalCommands', 'o
 						dojo.hitch(that, that._openOperationsPopup)();
 					}
 				});
-				//if operations waren't updated for 5 minutes this means they are out of date and not updated.
-				if(new Date()-this.getLastListUpdate()>300000){
-					this._operationsClient.getRunningOperations().then(function(operationsList){
-						dojo.hitch(that, that._loadOperationsList)(operationsList);
-						window.setTimeout(function() {
-							dojo.hitch(that, that._checkOperationsChanges());
-						}, 5000);
-					}, function(error){console.error(error);});
-				}else{
-					dojo.hitch(that, that._generateOperationsInfo(that._operations));
-					window.setTimeout(function() {
-						dojo.hitch(that, that._checkOperationsChanges());
-					}, 5000);
-				}
 				
 				window.addEventListener("storage", function(e){ //$NON-NLS-0$
 					if(e.key === "orionOperations"){ //$NON-NLS-0$
@@ -66,71 +52,12 @@ define(['i18n!orion/nls/messages', 'require', 'dojo', 'orion/globalCommands', 'o
 					}
 				});
 			},
-			_loadOperationsList: function(operationsList){
-				operationsList.lastClientDate = new Date();
-				if(operationsList.lastClientDate-this.getLastListUpdate()>300000){
-					this._operations = operationsList; //$NON-NLS-0$
-					this._generateOperationsInfo(operationsList);
-				}
-			},
-			/**
-			 * Gets information when operations list was last updated.
-			 * @returns {Date}
-			 */
-			getLastListUpdate: function(){
-				var list = this._operations; //$NON-NLS-1$ //$NON-NLS-0$
-				return list.lastClientDate ? new Date(list.lastClientDate) : new Date(0);
-			},
 			_markOperationAsFailed: function(operation, error, ioArgs){
 				operation.Message = messages["Operation status is unknown"];
 				operation.Running = false;
 				operation.Failed = true;
 				operation.Result = {HttpCode: ioArgs ? ioArgs.xhr.staus : 500, Severity: error, Message: error.Message ? error.Message : error};
 				this.writeOperation(operation);
-			},
-			_checkOperationsChanges: function(){
-				var that = this;
-				var operations = this._operations; //$NON-NLS-1$ //$NON-NLS-0$
-				var operationsToDelete = [];
-				var allRequests = [];
-				for(var i=0; i<operations.Children.length; i++){
-					var operation = operations.Children[i];
-					if(operation.Running==true && (new Date() - new Date(operation.lastClientDate ? operation.lastClientDate : 0) > 5000)){
-						var def = this._operationsClient.getOperation(operation.Location);
-						allRequests.push(def);
-						dojo.hitch(this, function(i){
-							def.then(function(jsonData, ioArgs) {
-								jsonData.lastClientDate = new Date();
-								dojo.hitch(that, that.writeOperation)(jsonData);
-							}, function(error, ioArgs){
-								if(error.status == 404){
-									//if task not found is must have been removed so remove it from tracking list
-									operationsToDelete.push(i);
-									return error;
-								}
-								var operation = operations.Children[i];
-								dojo.hitch(that, that._markOperationAsFailed(operation, error, ioArgs));
-							});
-						})(i);
-					}
-					if(!operation.Running  && (new Date() - new Date(operation.lastClientDate ? operation.lastClientDate : 0) > 300000)){
-						//after 5 minutes remove operation from the list
-						operationsToDelete.push(i);
-					}
-				}
-				new dojo.DeferredList(allRequests).addBoth(function(result){
-					if(operationsToDelete.length>0){
-						operations.lastClientDate = new Date();
-						for(var i=operationsToDelete.length-1; i>=0; i--){
-							operations.Children.splice(operationsToDelete[i], 1);
-						}
-						that._operations = operations; //$NON-NLS-0$
-						dojo.hitch(that, that._generateOperationsInfo)(operations);
-					}
-					window.setTimeout(function() {
-						dojo.hitch(that, that._checkOperationsChanges());
-					}, 5000);
-				});
 			},
 			_openOperationsPopup: function(){
 				try{
@@ -225,14 +152,33 @@ define(['i18n!orion/nls/messages', 'require', 'dojo', 'orion/globalCommands', 'o
 				var that = this;
 				if (operationJson && operationJson.Location && operationJson.Running==true) {
 					window.setTimeout(function() {
-						that._operationsClient.getOperation(operationJson.Location).then(function(jsonData, ioArgs) {
-								dojo.hitch(that, that.followOperation(jsonData, result, operationJson.Location));
+						that._operationsClient.getOperation(operationJson.Location).then(function(operationResult, ioArgs) {
+								result.callback(operationResult);
 							}, function(error, secondArg){
 								dojo.hitch(that, that.setProgressResult)({Severity: "Error", Message: error}); //$NON-NLS-0$
 								dojo.hitch(that, that._markOperationAsFailed(operationJson, error, secondArg));
 								result.errback(error, secondArg);
-								});
-					}, 2000);
+							}, function(operationJson){
+								dojo.hitch(that, that.writeOperation)(operationJson);
+								if (operationJson && operationJson.Result) {
+									that._serviceRegistry.getService("orion.page.message").setProgressMessage(""); //$NON-NLS-0$
+									var severity = that._operationsDialog.parseProgressResult(operationJson.Result).Severity;
+									if(severity=="Error" || severity=="Warning"){ //$NON-NLS-1$ //$NON-NLS-0$
+										operationJson.Result.failedOperation = {Location: operationLocation, Id: operationJson.Id, Name: operationJson.Name};
+										setTimeout(function(){
+												dojo.hitch(that, that._openOperationsPopup)();							
+										}, 10);
+									}
+									
+									if(!operationJson.Failed && operationJson.Idempotent==true){
+										window.setTimeout(function() {
+											dojo.hitch(that, that.removeOperation)(operationLocation, operationJson.Id);
+										}, 5000);
+									}
+								}
+								
+							});
+					}, 1);
 				} else if (operationJson && operationJson.Result) {
 					that._serviceRegistry.getService("orion.page.message").setProgressMessage(""); //$NON-NLS-0$
 					var severity = this._operationsDialog.parseProgressResult(operationJson.Result).Severity;

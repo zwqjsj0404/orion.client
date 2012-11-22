@@ -23,6 +23,10 @@ define(['i18n!orion/operations/nls/messages', "orion/Deferred"], function(messag
 			function(error) {
 				//forward other errors to client
 				clientDeferred.reject(error);
+			},
+			function(progress) {
+				//forward progress to client
+				clientDeferred.progress(progress);
 			}
 		);
 		return clientDeferred;
@@ -91,33 +95,18 @@ define(['i18n!orion/operations/nls/messages', "orion/Deferred"], function(messag
 		return result;
 	}
 	
-	function _registerOperationChangeListener(service, listener, longpollingId){
-		var that = this;
-		var args = {Longpolling: true};
-		if(longpollingId){
-			args.LongpollingId = longpollingId;
-		}
-		_doServiceCall(service, "getOperations", [args]).then(function(result){ //$NON-NLS-0$
-			if(longpollingId && that._currentLongpollingIds.indexOf(longpollingId)<0){
-				return;
-			}
-			listener(result, longpollingId);
-			if(result.LongpollingId){
-				that._currentLongpollingIds.push(result.LongpollingId);
-				_registerOperationChangeListener.bind(that)(service, listener, result.LongpollingId);
-			} else {
-				_registerOperationChangeListener.bind(that)(service, listener, longpollingId);
-			}
-			
+	function _registerOperationChangeListener(service, listener){
+		_doServiceCall(service, "getOperations", [false]).then(function(allOperations){
+			listener(allOperations);
+			_doServiceCall(service, "getOperations", [true]).then(function(result){ 
+				listener(result);
+			}, function(error){
+				console.error(error);//TODO handle error
+			}, function(update){
+				listener(update);
+			});			
 		}, function(error){
-			if(longpollingId && that._currentLongpollingIds.indexOf(longpollingId)<0){
-				return;
-			}
-			if("timeout"===error.dojoType) { //$NON-NLS-0$
-				_registerOperationChangeListener.bind(that)(service, listener, longpollingId);
-			} else {
-				setTimeout(function(){_registerOperationChangeListener.bind(that)(service, listener, longpollingId);}, 2000); //TODO display error and ask user to retry rather than retry every 2 sec
-			}
+			console.error(error);//TODO handle error
 		});
 	}
 	
@@ -133,16 +122,6 @@ define(['i18n!orion/operations/nls/messages', "orion/Deferred"], function(messag
 
 				for(var i=0; i<this._services.length; i++){
 					results[i] = _getOperations(this._services[i]);
-				}
-				return Deferred.all(results).then(function(lists){
-					return _mergeOperations(lists);
-				});
-			},
-			getRunningOperations: function(){
-				var results = [];
-
-				for(var i=0; i<this._services.length; i++){
-					results[i] = _getOperations(this._services[i], {RunningOnly: true});
 				}
 				return Deferred.all(results).then(function(lists){
 					return _mergeOperations(lists);

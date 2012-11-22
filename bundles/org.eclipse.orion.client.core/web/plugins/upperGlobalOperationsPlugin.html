@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<script type="text/javascript" src="../orion/plugin.js"></script>
+	<script type="text/javascript" src="../orion/Deferred.js"></script>
+
+	<script>
+		window.onload = function() {
+			var provider = new orion.PluginProvider();
+			
+			var taskDeferreds = {};
+			var longpolling = [];
+			
+			//keep operations in localStorage, so that they can be visible on other pages
+			function writeTask(task){
+				var tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+				tasks[task.Id] = task;
+				localStorage.setItem("tasks", JSON.stringify(tasks));
+				var lastTaskNo = parseInt(localStorage.getItem("taskNo")||0);
+				if(lastTaskNo<task.Id){
+					localStorage.setItem("taskNo", ++lastTaskNo);
+				}
+				localStorage.setItem("taskChanged", JSON.stringify(task));
+				longpollingChange("taskChanged");
+			}
+			
+			function readTask(taskLocation){
+				var tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+				var taskNo = parseInt(taskLocation.substring(taskLocation.indexOf(":")+1));
+				var task = tasks[taskNo];
+				if(!task){
+					return { Result: {Severity: "Ok", JsonData: {}}};
+				}
+				if(!taskDeferreds[task.Location]){
+					taskDeferreds[task.Location] = new orion.Deferred();
+				}
+				taskDeferreds[task.Location].progress(task);
+			}
+			
+			function deleteTask(taskLocation){
+				var tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+				var taskNo = parseInt(taskLocation.substring(taskLocation.indexOf(":")+1));
+				var task = tasks[taskNo];
+				delete tasks[taskNo];
+				localStorage.setItem("tasks", JSON.stringify(tasks));
+				localStorage.setItem("taskDeleted", task.Location);
+				longpollingChange("taskDeleted");
+			}
+			
+			function getAllTasks(){
+				var tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+				var children = [];
+				for(var i in tasks){
+					if(tasks[i]){
+						children.push(tasks[i]);
+					}
+				}
+				return {Children: children};
+			}
+			
+			/* Operations client is notified via longpolling. Every time a change in operations is made
+			   notify all the registered requests.*/
+			function longpollingChange(key){
+				if(key==="taskChanged"){
+					var task = JSON.parse(localStorage.getItem("taskChanged"));
+					if(!taskDeferreds[task.Location]){
+						taskDeferreds[task.Location] = new orion.Deferred();
+					}
+					taskDeferreds[task.Location].progress(task);
+					if(!task.Running){
+						if(task.Result && task.Result.Severity === "Ok"){
+							taskDeferreds[task.Location].resolve(task.Result.JsonData);
+						} else {
+							taskDeferreds[task.Location].reject(task.Result);
+						}
+					}
+					notifyLongpolling({Children: [task]});
+				} else if(key==="taskDeleted"){
+					var taskLocation = localStorage.getItem("taskDeleted");
+					notifyLongpolling({DeletedChildren: [taskLocation]});
+				}
+			}
+			
+			/* use localStorage events to send longpolling notifications to clients registered 
+			   to every instance of this plugin */
+			window.addEventListener('storage', function (e) {longpollingChange(e.key);});
+			
+			function notifyLongpolling(change){
+				for(var i=0; i<longpolling.length; i++){
+					longpolling[i].progress(change);
+				}
+			}
+			
+			var serviceImpl = {
+				run : function(text) {
+				
+				//instead of returning an aswer we return the task description				
+				var taskNo = parseInt(localStorage.getItem("taskNo") || 0)+1;
+				var task = {
+					"CanBeCanceled": false,
+					"Running": true,
+					  "Created": new Date().getTime(),
+					  "Id": taskNo,
+					  "Idempotent": true,
+					  "Location": "upperGlobalPlugin:"+taskNo,
+					  "Message": "Generating to upper " + text,
+					  "Modified": new Date().getTime(),
+					  "Name": taskNo + ": Generating to upper " + text,
+					  "PercentComplete": 0
+					};
+					
+				writeTask(task);
+				
+				//this simulates generating uppercase to be a long running operation
+				window.setTimeout(function() {
+							task.Message = "Halfway to generate to upper";
+							writeTask(task);
+								window.setTimeout(function() {
+								task.Running = false;
+								task.Result = {Severity: "Ok", JsonData: text.toUpperCase(), Message: "Generated to upper"};
+								writeTask(task);
+							}, 10000);
+						}, 10000);
+					
+					return {task: task};
+				}
+			};
+			var serviceProps = {
+				name : "UPPERCASE",
+				img : "../images/gear.gif",
+				key : [ "u", true ]
+			};
+			
+			
+			var tasksImpl = {
+				getOperation: function(taskLocation) {
+					readTask(taskLocation);
+					return taskDeferreds[taskLocation].promise;
+				},
+				removeOperation: function(taskLocation) {
+					deleteTask(taskLocation);
+				},
+				getOperations: function(contUpdate) {
+					if(contUpdate){
+						var def = new orion.Deferred();
+						longpolling.push(def);
+						return def;
+					} else {
+						return getAllTasks();
+					}
+				},
+				removeCompletedOperations: function(){
+					var allOperations = getAllTasks().Children || [];
+					for(var i=0; i<allOperations.length; i++){
+						if(!allOperations[i].Running){
+							deleteTask(allOperations[i].Location);
+						}
+					}
+				},
+				cancelOperation: function(operationLocation){
+					//no cancelling
+				}
+			};
+			
+			var tasksProps = {
+				name: "UPPERCASE TASKS",
+				pattern: "upperGlobalPlugin:"
+			};
+			
+			provider.registerService("orion.edit.command", serviceImpl, serviceProps);
+			provider.registerService("orion.core.operation", tasksImpl, tasksProps);
+			provider.connect();
+		};
+	</script>
+</head>
+<body>
+<h1>Uppercase plugin for Orion</h1>
+<p>This is a plugin for <a href="http://wiki.eclipse.org/Orion/">Orion</a>. It is not meant to be viewed in a browser.</p>
+</body>
+</html>

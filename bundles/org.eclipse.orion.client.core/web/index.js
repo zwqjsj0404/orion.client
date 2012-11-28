@@ -14,6 +14,6 @@
 
 define(['orion/bootstrap', 'domReady!'], function(mBootstrap) {
 	mBootstrap.startup().then(function(core) {
-		window.location = "navigate/table.html";
+		window.location = "jazzui/artifacts.html";
 	});
 });

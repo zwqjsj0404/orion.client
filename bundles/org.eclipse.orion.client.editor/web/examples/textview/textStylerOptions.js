@@ -151,8 +151,6 @@ define("examples/textview/textStylerOptions", ['orion/bootstrap', 'orion/textvie
 		},
 		_onStorage: function (e) {
 		
-			console.log( ' _ONSTORAGE ' );
-		
 			if( e.key === this.storageKey ){
 				this._updateStylesheet( this.preferences );
 			}

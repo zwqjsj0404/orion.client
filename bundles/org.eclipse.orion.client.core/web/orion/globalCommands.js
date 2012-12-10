@@ -14,12 +14,12 @@
 
 define(['i18n!orion/nls/messages', 'require', 'dojo', 'dijit', 'orion/commonHTMLFragments', 'orion/commands', 'orion/parameterCollectors', 
 	'orion/extensionCommands', 'orion/uiUtils', 'orion/textview/keyBinding', 'orion/breadcrumbs', 'orion/webui/littlelib', 'orion/webui/splitter', 
-	'orion/webui/dropdown', 'orion/favorites', 'orion/contentTypes', 'orion/URITemplate', 'orion/PageUtil', 'orion/widgets/themes/container/ThemeSheetWriter', 
+	'orion/webui/dropdown', 'orion/webui/tooltip', 'orion/favorites', 'orion/contentTypes', 'orion/URITemplate', 'orion/PageUtil', 'orion/widgets/themes/container/ThemeSheetWriter', 
 	'orion/searchUtils', 'orion/inputCompletion/inputCompletion', 'orion/globalSearch/advSearchOptContainer', 'orion/Deferred',
-	'orion/widgets/UserMenu', 'dojo/DeferredList', 'orion/widgets/OpenResourceDialog'], 
+	'orion/widgets/UserMenu', 'orion/PageLinks', 'dojo/DeferredList', 'orion/widgets/OpenResourceDialog'], 
         function(messages, require, dojo, dijit, commonHTML, mCommands, mParameterCollectors, mExtensionCommands, mUIUtils, mKeyBinding, mBreadcrumbs, lib, mSplitter, 
-        mDropdown, mFavorites, mContentTypes, URITemplate, PageUtil, ThemeSheetWriter, mSearchUtils, mInputCompletion, 
-        mAdvSearchOptContainer, Deferred, mUserMenu){
+        mDropdown, mTooltip, mFavorites, mContentTypes, URITemplate, PageUtil, ThemeSheetWriter, mSearchUtils, mInputCompletion, 
+        mAdvSearchOptContainer, Deferred, mUserMenu, PageLinks){
 
 	/**
 	 * This class contains static utility methods. It is not intended to be instantiated.
@@ -101,13 +101,13 @@ define(['i18n!orion/nls/messages', 'require', 'dojo', 'dijit', 'orion/commonHTML
 		var userDropdown = new mDropdown.Dropdown({
 			dropdown: dropdownNode
 		});
-		var menuGenerator = new mUserMenu.UserMenu({dropdownNode: dropdownNode, dropdown: userDropdown});
+		var menuGenerator = new mUserMenu.UserMenu({dropdownNode: dropdownNode, dropdown: userDropdown, serviceRegistry: serviceRegistry});
 		var dropdownTrigger = lib.node("userTrigger"); //$NON-NLS-0$
 		
-		new mCommands.CommandTooltip({
-			connectId: [dropdownTrigger],
-			label: messages['Options'],
-			position: ["above", "left", "right", "below"] // otherwise defaults to right and obscures adjacent commands //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+		new mTooltip.Tooltip({
+			node: dropdownTrigger,
+			text: messages['Options'],
+			position: ["below", "left"] //$NON-NLS-1$ //$NON-NLS-0$
 		});
 			
 		setUserName(serviceRegistry, dropdownTrigger);
@@ -384,11 +384,10 @@ define(['i18n!orion/nls/messages', 'require', 'dojo', 'dijit', 'orion/commonHTML
 						makeFavorite(serviceRegistry);
 					}
 				});
-				new mCommands.CommandTooltip({
-					connectId: [faveButton],
-					label: messages["Add to the favorites list"],
-					position: ["below", "left", "right", "above"], // below since this is at top of page. //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
-					commandService: commandService
+				new mTooltip.Tooltip({
+					node: faveButton,
+					text: messages["Add to the favorites list"],
+					position: ["left", "below", "above"] //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
 				});
 				dojo.style(faveButton, "visibility", "visible"); //$NON-NLS-1$ //$NON-NLS-0$
 			} else {
@@ -595,6 +594,101 @@ define(['i18n!orion/nls/messages', 'require', 'dojo', 'dijit', 'orion/commonHTML
 		}
 	}
 	
+	function isDescendant(parent, child) {
+	     var node = child.parentNode;
+	     while (node !== null) {
+	         if (node === parent) {
+	             return true;
+	         }
+	         node = node.parentNode;
+	     }
+	     return false;
+	}
+	
+	
+	/* This function adds a settings dialog to a page. It adds it so that	
+		a settings gear will appear at the right hand side */
+	
+	function addSettings( settings ){
+		var settingsNode = document.getElementById("settingsTab");
+		var settingsButton = document.getElementById("settingsAction");
+		var CLICKED = false;
+		
+		settingsNode.style.visibility = '';
+		settingsButton.style.visibility = '';
+		settingsButton.onclick = function(){
+		
+			if( !CLICKED ){
+			
+				CLICKED = true;
+		
+				var TAB_HEIGHT = 24;
+				var TAB_WIDTH = 25;
+				var PANEL_HEIGHT = 150;
+				var PANEL_WIDTH = 220;
+				var BORDER_RADIUS = '3px';
+				var COLOR = '#555';
+			
+				settingsNode.style.backgroundColor = COLOR;
+				settingsNode.style.zIndex = '99';
+				settingsNode.style.borderTopRightRadius = BORDER_RADIUS;
+				settingsNode.style.borderTopLeftRadius = BORDER_RADIUS;
+				
+				settingsButton.className = "core-sprite-settings-white";
+				
+				settingsNode.id = 'settingsNode';
+				settingsButton.id = 'settingsButton';
+				
+				var rightPane = document.getElementById( 'innerPanels' );	
+				var rpBox = rightPane.getBoundingClientRect();
+				var box = settingsNode.getBoundingClientRect();
+				var leftPane = document.getElementById( 'outlineContainer' );
+				var lpBox = leftPane.getBoundingClientRect();
+				
+				var panel = document.createElement( 'div' );
+				panel.className = 'settingsPanel';
+				panel.style.width = PANEL_WIDTH + 'px';
+				panel.style.height = PANEL_HEIGHT + 'px';
+				panel.style.backgroundColor = COLOR;
+				panel.style.zIndex = '99';
+				panel.style.top = box.top - rpBox.top + TAB_HEIGHT -4 + 'px';
+				panel.id = 'settingsPanel';		
+				panel.style.borderTopLeftRadius = BORDER_RADIUS;
+				panel.style.borderBottomRightRadius = BORDER_RADIUS;
+				panel.style.borderBottomLeftRadius = BORDER_RADIUS;
+				
+				rightPane.appendChild( panel );
+				
+				settings.appendTo( panel );
+				
+				var listener = window.addEventListener("click", function(event) { 
+				
+					switch( event.target.id ){
+						
+						case 'settingsPanel':
+						case 'settingsButton':
+						case 'settingsNode':
+							break;
+							
+						default:
+						
+							if( !isDescendant( panel, event.target ) ){
+								settingsButton.className = "core-sprite-settings";
+								settingsNode.style.backgroundColor = 'white';
+		
+								rightPane.removeChild( panel );
+								CLICKED = false;
+								
+								settings.destroy();
+								window.removeEventListener( listener );
+							}
+							
+							break;
+					}			
+				}, false);
+			}
+		};
+	}
 	
 	/**
 	 * Generates the banner at the top of a page.
@@ -637,44 +731,11 @@ define(['i18n!orion/nls/messages', 'require', 'dojo', 'dijit', 'orion/commonHTML
 		// generate primary nav links. 
 		var primaryNav = dojo.byId("primaryNav"); //$NON-NLS-0$
 		if (primaryNav) {
-			// Note that the shape of the "orion.page.link" extension is not in any shape or form that could be considered final.
-			// We've included it to enable experimentation. Please provide feedback on IRC or bugzilla.
-			
-			// The shape of a contributed navigation link is (for now):
-			// info - information about the navigation link (object).
-			//     required attribute: name - the name of the navigation link
-			//     required attribute: id - the id of the navigation link
-			//     required attribute: uriTemplate - the URL for the navigation link
-			//     optional attribute: image - a URL to an icon representing the link (currently not used, may use in future)
-			var navLinks= serviceRegistry.getServiceReferences("orion.page.link"); //$NON-NLS-0$
-			var params = PageUtil.matchResourceParameters(window.location.href);
-			// TODO: should not be necessary, see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=373450
-			var hostName = window.location.protocol + "//" + window.location.host; //$NON-NLS-0$
-			var locationObject = {OrionHome: hostName, Location: params.resource};
-			for (var i=0; i<navLinks.length; i++) {
-				var info = {};
-				var propertyNames = navLinks[i].getPropertyKeys();
-				for (var j = 0; j < propertyNames.length; j++) {
-					info[propertyNames[j]] = navLinks[i].getProperty(propertyNames[j]);
-				}
-			if(info.uriTemplate && info.nls && (info.name || info.nameKey)){
-				require(['i18n!'+info.nls], function(commandMessages){
-					var uriTemplate = new URITemplate(info.uriTemplate);
-					var expandedHref = window.decodeURIComponent(uriTemplate.expand(locationObject));
-					expandedHref = PageUtil.validateURLScheme(expandedHref);
-					var link = dojo.create("a", {href: expandedHref, target: target, 'class':'targetSelector'}, primaryNav, "last"); //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
-					text = document.createTextNode(info.nameKey? commandMessages[info.nameKey]: info.name);
-					dojo.place(text, link, "only"); //$NON-NLS-0$
+			PageLinks.createPageLinks(serviceRegistry, "orion.page.link").then(function(links) {
+				links.forEach(function(link) {
+					primaryNav.appendChild(link);
 				});
-			} else if (info.uriTemplate && info.name) {
-					var uriTemplate = new URITemplate(info.uriTemplate);
-					var expandedHref = window.decodeURIComponent(uriTemplate.expand(locationObject));
-					expandedHref = PageUtil.validateURLScheme(expandedHref);
-					var link = dojo.create("a", {href: expandedHref, target: target, 'class':'targetSelector'}, primaryNav, "last"); //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
-					text = document.createTextNode(info.name);
-					dojo.place(text, link, "only"); //$NON-NLS-0$
-				}
-			}
+			});
 		}
 		
 		// hook up search box: 1.The search box itself 2.Default search proposal provider(recent and saved search) 
@@ -960,8 +1021,8 @@ define(['i18n!orion/nls/messages', 'require', 'dojo', 'dijit', 'orion/commonHTML
 			}
 		}));
 		dojo.connect(document, "onclick", dojo.hitch(this, function(e) { //$NON-NLS-0$
-			var clickNode =  e.target || e.originalTarget || e.srcElement; 
-			if (clickNode && clickNode.id !== "keyAssist") { //$NON-NLS-0$
+			var clickNode =  e.target || e.originalTarget || e.srcElement;
+			if (clickNode && (!clickNode.classList || !clickNode.classList.contains("key-assist-menuitem"))) { //$NON-NLS-0$
 				keyAssistNode.style.display = "none"; //$NON-NLS-0$
 			}
 			if(clickNode && !advSearchOptContainer.clicked(clickNode) && clickNode.id !== "advancedSearchDropDown"){
@@ -1094,6 +1155,7 @@ define(['i18n!orion/nls/messages', 'require', 'dojo', 'dijit', 'orion/commonHTML
 	
 	//return the module exports
 	return {
+		addSettings: addSettings,
 		generateBanner: generateBanner,
 		getToolbarElements: getToolbarElements,
 		layoutToolbarElements: layoutToolbarElements,

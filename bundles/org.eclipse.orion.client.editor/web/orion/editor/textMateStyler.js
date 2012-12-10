@@ -12,7 +12,117 @@
 /*jslint regexp:false laxbreak:true*/
 /*global define */
 
-define("orion/editor/textMateStyler", ['orion/editor/regex'], function(mRegex) {
+define("orion/editor/textMateStyler", ['orion/editor/regex' ], function(mRegex) {
+
+var preferences;
+
+function _updateStylesheet(preferences, util){
+
+	var storage;
+	var CATEGORY = "JavaScript Editor";
+	var USER_THEME = "";
+	
+	var self = this;
+	
+	preferences.getPreferences('/settings', 2).then( function(prefs){	
+			
+		var data = prefs.get(CATEGORY);
+		
+		if( data !== undefined ){
+	
+			storage = JSON.parse( prefs.get(CATEGORY) );	
+			if (!storage) { return; }
+			if (self._stylesheet) {
+				self._stylesheet.parentNode.removeChild(self._stylesheet);
+				self._stylesheet = null;
+			}
+		}
+		
+		var parent = self.textView._parent;
+		var document = parent.ownerDocument;
+		var stylesheet = self._stylesheet = self.util.createElement(document, "style");
+		stylesheet.appendChild(document.createTextNode(self._styleSheet( storage, USER_THEME, self.util)));
+		var head = document.getElementsByTagName("head")[0] || document.documentElement;
+		
+		head.appendChild(stylesheet);
+
+		self.textView.update(true);		
+	});
+}
+
+
+function _styleSheet( settings, theme ){
+		
+			var elements = [];
+		
+			for( var count = 0; count < settings.length; count++ ){
+				elements[settings[count].element] = settings[count].value;
+			}
+			
+			var result = [];
+			result.push("");
+			
+			//view container
+			var family = elements['fontFamily'];
+			if(family === "sans serif"){
+				family = '"Menlo", "Consolas", "Vera Mono", "monospace"';
+			}else{
+				family = 'monospace';
+			}	
+			
+			result.push( theme + " .textviewContainer {" );
+			result.push( "\background-color:" + elements['background'] + ";" );
+			result.push( "\tfont-family: " + family + ";" );
+			result.push( "\tfont-size: " + elements['fontSize'] + ";" );
+			result.push( "\tmin-width: 50px;" );
+			result.push( "\tmin-height: 50px;" );
+			result.push("\tcolor: " + elements['text'] + ";");
+			result.push("}");
+			
+			result.push(  theme + " {");
+			result.push("\tfont-family: " + family + ";");
+			result.push("\tfont-size: " + elements['fontSize'] + ";");
+			
+			result.push("\tcolor: " + elements['text'] + ";");
+			result.push("}");
+			
+			result.push(  theme + " .textview {");
+			result.push("\tbackground-color: " + elements['background'] + ";");
+			result.push("}");
+			
+			result.push(  theme + ".ruler.annotations{");
+			result.push("\tbackground-color: " + 'white' + ";");
+			result.push("}");
+			
+			result.push(  theme + " .ruler {");
+			result.push("\tbackground-color: " + elements['annotationRuler'] + ";");
+			result.push("}");
+			
+			result.push(  theme + " .rulerLines {");
+			result.push("\tcolor: " + elements['lineNumber'] + ";");
+			result.push("\tbackground-color: " + elements['annotationRuler'] + ";");
+			result.push("}");
+			
+			result.push(  theme + " .rulerLines.even {");
+			result.push("\tcolor: " + elements['lineNumber'] + ";");
+			result.push("\tbackground-color: " + elements['annotationRuler'] + ";");
+			result.push("}");
+
+			result.push(  theme + " .rulerLines.odd {");
+			result.push("\tcolor: " + elements['lineNumber'] + ";");
+			result.push("\tbackground-color: " + elements['annotationRuler'] + ";");
+			result.push("}");
+			
+			result.push(  theme + " .annotationLine.currentLine {");
+			result.push("\tbackground-color: " + elements['currentLine'] + ";");
+			result.push("}");
+
+			result.push(  theme + " .entity-name-tag {");
+			result.push("\color: " + elements['keyword'] + ";");
+			result.push("}");				
+			
+			return result.join("\n");
+		}
 
 var RegexUtil = {
 	// Rules to detect some unsupported Oniguruma features
@@ -429,8 +539,8 @@ var RegexUtil = {
 	 * produce this object by running a PList-to-JavaScript conversion tool on a TextMate <code>.tmLanguage</code> file.
 	 * @param {Object[]} [externalGrammars] Additional grammar objects that will be used to resolve named rule references.
 	 */
-	function TextMateStyler(textView, grammar, externalGrammars) {
-		this.initialize(textView);
+	function TextMateStyler(textView, grammar, externalGrammars, mBootStrap, util) {
+		this.initialize(textView, mBootStrap);
 		// Copy grammar object(s) since we will mutate them
 		this.grammar = clone(grammar);
 		this.externalGrammars = externalGrammars ? clone(externalGrammars) : [];
@@ -439,11 +549,24 @@ var RegexUtil = {
 		this._tree = null;
 		this._allGrammars = {}; /* key: {String} scopeName of grammar, value: {Object} grammar */
 		this.preprocess(this.grammar);
+		this._updateStylesheet = _updateStylesheet;
+		this._styleSheet = _styleSheet;
+		this.util = util;
 	}
 	TextMateStyler.prototype = /** @lends orion.editor.TextMateStyler.prototype */ {
-		initialize: function(textView) {
+		initialize: function(textView, mBootStrap, util) {
 			this.textView = textView;
 			var self = this;
+			
+			if (this.textView && mBootStrap) {
+				mBootStrap.startup().then(function(core) {
+					preferences = core.preferences;
+					self.preferences = preferences;
+					self._updateStylesheet(preferences, util);
+					self.storageKey = preferences.listenForChangedSettings( self._listener.onStorage );
+				});
+			}		
+
 			this._listener = {
 				onModelChanged: function(e) {
 					self.onModelChanged(e);
@@ -453,6 +576,9 @@ var RegexUtil = {
 				},
 				onLineStyle: function(e) {
 					self.onLineStyle(e);
+				},
+				onStorage: function(e){
+					self.onStorage(e);
 				}
 			};
 			textView.addEventListener("ModelChanged", this._listener.onModelChanged);
@@ -462,6 +588,11 @@ var RegexUtil = {
 		},
 		onDestroy: function(/**eclipse.DestroyEvent*/ e) {
 			this.destroy();
+		},
+		onStorage: function (e) {
+			if( e.key === this.storageKey ){
+				this._updateStylesheet( this.preferences );
+			}
 		},
 		destroy: function() {
 			if (this.textView) {
@@ -648,6 +779,7 @@ var RegexUtil = {
 			}
 			return resolved;
 		},
+
 		/** @private */
 		ContainerNode: (function() {
 			function ContainerNode(parent, rule) {
